@@ -1,0 +1,32 @@
+# Matrice de collecte : chaque mot-clé est croisé avec chaque nature de contrat.
+# 9 mots-clés x 2 natures = 18 recherches.
+
+defaults:
+  # 150 est le maximum accepté par l'API : au-delà elle répond 400.
+  page_size: 150
+  # Plafond volontaire par recherche. L'API refuse de toute façon une position
+  # de début supérieure à 3000, soit 3150 offres au maximum par recherche ;
+  # au-delà, le client découpe la recherche par date de création.
+  max_results_per_search: 3000
+  # Fenêtre de collecte utilisée quand une recherche doit être découpée.
+  lookback_days: 365
+
+keywords:
+  - data engineer
+  - data analyst
+  - data scientist
+  - business intelligence
+  - machine learning
+  - no-code
+  - low-code
+  - power platform
+  - automatisation
+
+# Libellés relevés dans /referentiel/naturesContrats le 2026-09-08.
+# collect.py revérifie ces codes à chaque exécution et s'arrête si l'un d'eux
+# disparaît du référentiel.
+contract_natures:
+  - code: E2
+    label: "Contrat apprentissage"
+  - code: FS
+    label: "Cont. professionnalisation"
