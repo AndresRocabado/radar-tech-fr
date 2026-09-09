@@ -3,4 +3,5 @@
 data/raw/
 __pycache__/
 *.duckdb
+CLAUDE.md
 claude.md

@@ -22,6 +22,17 @@ keywords:
   - power platform
   - automatisation
 
+# Bornes de vraisemblance des salaires annualisés, vérifiées par les tests.
+# SMIC brut annuel sur une base 35h : 11,88 €/h x 35 x 52 = 21 621,60 €.
+# À revoir à chaque revalorisation du SMIC.
+# Un apprenti est légalement payé entre 27 % et 100 % du SMIC selon son âge et
+# l'année de son contrat, d'où un plancher distinct pour l'alternance : sans
+# lui, toutes les offres réellement collectées seraient signalées à tort.
+salaire:
+  smic_annuel: 21621.60
+  ratio_plancher_alternance: 0.27
+  plafond_annuel: 300000
+
 # Libellés relevés dans /referentiel/naturesContrats le 2026-09-08.
 # collect.py revérifie ces codes à chaque exécution et s'arrête si l'un d'eux
 # disparaît du référentiel.
