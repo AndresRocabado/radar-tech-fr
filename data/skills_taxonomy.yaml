@@ -1,0 +1,263 @@
+# Dictionnaire contrôlé des compétences techniques.
+#
+# Une entrée = une technologie. Elle s'écrit soit en chaîne simple, soit en
+# bloc :
+#
+#   - label: Power BI          nom canonique, affiché dans le dashboard
+#     alias: [PBI, Power-BI]   formes alternatives cherchées en plus du label
+#     casse: true              label et alias sensibles à la casse (défaut : non)
+#     alias_casse: [Make]      alias toujours sensibles à la casse, eux
+#
+# Les deux régimes cohabitent dans une même entrée : « Integromat » se cherche
+# à la casse près ou non, « Make » seulement capitalisé.
+#
+# Le label sert lui-même de terme de recherche. Pour les technologies dont le
+# nom est un mot courant (« R », « Go », « Make »), le label porte donc une
+# précision entre parenthèses : ainsi il ne peut pas matcher tout seul, et
+# seuls les alias explicites déclenchent la détection.
+#
+# Inutile de décliner les séparateurs : « Power BI » retrouve « PowerBI » et
+# « Power-BI », « no-code » retrouve « nocode » et « no code ». Les accents et
+# la casse sont ignorés, sauf si `casse: true`.
+#
+# Le dictionnaire est volontairement resserré sur ce que le marché français de
+# la data et de l'automatisation cite réellement : mieux vaut 130 entrées
+# fiables qu'un catalogue exhaustif dont la moitié ne sortira jamais.
+
+version: 1
+
+familles:
+
+  # ------------------------------------------------------------- langages
+  langages:
+    - Python
+    - label: R (langage)
+      alias: [langage R, programmation R, RStudio]
+    - label: SQL
+      alias: [PL/SQL, T-SQL, Transact-SQL]
+    - Java
+    - label: JavaScript
+      alias: [JS, Node.js, NodeJS]
+    - TypeScript
+    - Scala
+    - label: Go (Golang)
+      alias: [Golang, langage Go]
+    - label: C++
+      alias: [CPP]
+    - label: C#
+      alias: [C Sharp, CSharp]
+    - label: .NET
+      alias: [ASP.NET, dotnet]
+    - Rust
+    - label: MATLAB
+      alias: [Simulink]
+    - label: SAS
+      alias: [SAS Base, SAS Viya]
+    - label: VBA
+      alias: [Visual Basic]
+    - Bash
+    - PowerShell
+
+  # ---------------------------------------------------------------- cloud
+  # Les services managés sont rangés chez leur fournisseur plutôt que par
+  # fonction : « Redshift » renseigne d'abord sur l'adhérence à AWS.
+  cloud:
+    - label: AWS
+      alias: [Amazon Web Services]
+    - label: Amazon S3
+      alias: [S3]
+    - label: AWS Lambda
+      alias: [Lambda function]
+    - Amazon Redshift
+    - AWS Glue
+    - label: Azure
+      alias: [Microsoft Azure]
+    - label: Azure Data Factory
+      alias: [ADF]
+    - Azure Synapse
+    - Azure Data Lake
+    - Microsoft Fabric
+    - label: Google Cloud
+      alias: [GCP, Google Cloud Platform]
+    - label: BigQuery
+      alias: [Google BigQuery]
+    - Vertex AI
+    - label: OVHcloud
+      alias: [OVH]
+    - Scaleway
+
+  # ----------------------------------------------------- data engineering
+  data_engineering:
+    - label: Apache Spark
+      alias: [Spark, PySpark]
+    - label: Hadoop
+      alias: [HDFS, MapReduce]
+    - label: Apache Kafka
+      alias: [Kafka]
+    - label: Apache Airflow
+      alias: [Airflow]
+    - label: dbt
+      alias: [data build tool]
+    - Databricks
+    - Snowflake
+    - label: Talend
+      alias: [Talend Open Studio]
+    - label: SSIS
+      alias: [Integration Services]
+    - label: Apache NiFi
+      alias: [NiFi]
+    - Fivetran
+    - Airbyte
+    - label: Pandas
+      alias: [Polars]
+    - NumPy
+    - DuckDB
+    - label: PostgreSQL
+      alias: [Postgres]
+    - MySQL
+    - label: SQL Server
+      alias: [Microsoft SQL Server, SSMS]
+    - Oracle Database
+    - MongoDB
+    - label: Elasticsearch
+      alias: [ElasticSearch, ELK]
+
+  # -------------------------------------------------- BI et visualisation
+  bi_viz:
+    - label: Power BI
+      alias: [PBI]
+    - label: Power Query
+      alias: [Langage M]
+    - DAX
+    - Tableau Software
+    - label: Qlik
+      alias: [QlikView, Qlik Sense]
+    - Looker
+    - label: Looker Studio
+      alias: [Google Data Studio, Data Studio]
+    - Metabase
+    - label: Apache Superset
+      alias: [Superset]
+    - label: SAP BusinessObjects
+      alias: [BusinessObjects, SAP BO]
+    # Pas d'alias « BI » nu : il se déclencherait à l'intérieur de « Power BI »
+    # et gonflerait la famille d'un doublon systématique.
+    - label: Business Intelligence
+      alias: [informatique décisionnelle, outils BI, décisionnel, décisionnelle]
+    - label: Excel
+      alias: [Microsoft Excel, tableau croisé dynamique, TCD]
+    - Google Sheets
+    - Plotly
+    - Matplotlib
+    - Streamlit
+
+  # ------------------------------------------------------ no-code low-code
+  # Le cœur de l'observatoire, gardé plus large que les autres familles.
+  # « Make » et « Notion » demandent des précautions : l'un est un mot anglais
+  # courant et un outil de build, l'autre un mot français très fréquent
+  # (« des notions de SQL »).
+  nocode_lowcode:
+    - label: Power Apps
+      alias: [PowerApps, Microsoft PowerApps]
+    - label: Power Automate
+      alias: [PowerAutomate, Microsoft Flow]
+    - label: Power Platform
+      alias: [PowerPlatform, Microsoft Power Platform]
+    - Power Pages
+    - label: n8n
+      alias: [n8n.io]
+    # « Make » nu n'est cherché que capitalisé : en français, un « make »
+    # minuscule est de l'anglais courant ou l'outil de build, jamais la
+    # plateforme d'automatisation.
+    - label: Make (Integromat)
+      alias: [Integromat, Make.com]
+      alias_casse: [Make]
+    - Zapier
+    - label: Bubble
+      alias: [Bubble.io]
+      casse: true
+    - Airtable
+    - Retool
+    - Appian
+    - Mendix
+    - label: OutSystems
+      alias: [Out Systems]
+    - label: Notion
+      alias: [Notion.so]
+      casse: true
+    - Webflow
+    - Glide
+    - Softr
+    - Xano
+    - AppSheet
+    - Budibase
+    - NocoDB
+    - Baserow
+    - Zoho Creator
+    - Windmill
+    # Termes génériques : ils désignent la pratique, pas un outil nommé. Le
+    # rapport les compte à part pour ne pas gonfler la part « outillée ».
+    - label: No-code (terme générique)
+      alias: [no-code, nocode, sans code]
+    - label: Low-code (terme générique)
+      alias: [low-code, lowcode]
+
+  # --------------------------------------------------------------- IA / ML
+  ia_ml:
+    - label: scikit-learn
+      alias: [sklearn, scikit learn]
+    - TensorFlow
+    - label: PyTorch
+      alias: [Torch]
+    - Keras
+    - XGBoost
+    - label: Hugging Face
+      alias: [HuggingFace, Transformers]
+    - spaCy
+    - LangChain
+    - label: OpenAI
+      alias: [ChatGPT, GPT-4]
+    - Mistral AI
+    - label: Anthropic
+      alias: [Claude AI]
+    - label: MLflow
+      alias: [ML flow]
+    - Amazon SageMaker
+    - label: Machine Learning
+      alias: [apprentissage automatique, ML]
+    - label: Deep Learning
+      alias: [apprentissage profond, réseaux de neurones]
+    - label: NLP
+      alias: [traitement du langage naturel, TAL]
+    - label: Computer Vision
+      alias: [vision par ordinateur]
+    - label: LLM
+      alias: [grand modèle de langage, modèles de langage]
+    - label: RAG
+      alias: [retrieval augmented generation]
+    - label: MLOps
+      alias: [ML Ops]
+
+  # -------------------------------------------------------------- devops
+  devops:
+    - Docker
+    - label: Kubernetes
+      alias: [K8s]
+    - Terraform
+    - Ansible
+    - Jenkins
+    # Le label reste la plateforme : une offre qui cite « GitLab » ne dit pas
+    # forcément qu'elle en utilise l'intégration continue.
+    - label: GitLab
+      alias: [GitLab CI, GitLab CI/CD]
+    - label: GitHub
+      alias: [GitHub Actions]
+    - label: Git
+      alias: [versioning Git]
+    - label: CI/CD
+      alias: [intégration continue, déploiement continu]
+    - Azure DevOps
+    - label: Linux
+      alias: [Unix]
+    - Grafana
+    - Datadog
