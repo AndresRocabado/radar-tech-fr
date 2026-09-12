@@ -3,5 +3,7 @@
 data/raw/
 __pycache__/
 *.duckdb
+data/embeddings.npy
+data/embeddings_ids.json
 CLAUDE.md
 claude.md
