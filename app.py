@@ -9,7 +9,7 @@ from __future__ import annotations
 import streamlit as st
 
 from src.dashboard import data, sidebar
-from src.dashboard.views import nocode, overview, search
+from src.dashboard.views import assistant, nocode, overview, search
 
 
 def main() -> None:
@@ -30,6 +30,8 @@ def main() -> None:
                 icon=":material/bolt:", url_path="no-code-ia"),
         st.Page(lambda: search.render(filters), title="Recherche",
                 icon=":material/search:", url_path="recherche"),
+        st.Page(lambda: assistant.render(filters), title="Assistant",
+                icon=":material/chat:", url_path="assistant"),
     ]
     st.navigation(pages).run()
 
