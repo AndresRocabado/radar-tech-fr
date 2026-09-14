@@ -1,8 +1,21 @@
-# Thème clair et sobre, aligné sur la palette des graphiques (src/dashboard/charts.py).
+# Thème clair et sobre, repris trait pour trait de la palette des graphiques
+# (src/dashboard/charts.py) : le fond de page vaut SURFACE, si bien qu'un
+# graphique Plotly ne dessine pas de rectangle plus clair que la page.
 [theme]
 base = "light"
-primaryColor = "#2a78d6"
-backgroundColor = "#f9f9f7"
+primaryColor = "#2a78d6"          # PRIMARY : la seule teinte qui porte les données
+backgroundColor = "#fcfcfb"       # SURFACE : identique au paper_bgcolor des graphiques
 secondaryBackgroundColor = "#f0efec"
-textColor = "#0b0b0b"
+textColor = "#0b0b0b"             # INK
+linkColor = "#2a78d6"             # PRIMARY
+codeBackgroundColor = "#f0efec"
+borderColor = "#e1e0d9"           # GRID : celle des lignes d'axe des graphiques
+showWidgetBorder = true
 font = "sans-serif"
+
+[client]
+# Démonstration publique : la barre d'outils se réduit au strict nécessaire.
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
