@@ -104,6 +104,20 @@ def test_filtre_famille_restreint_offres_et_competences(con: duckdb.DuckDBPyConn
     assert set(queries.top_skills(con, filters)["famille"]) == {"ia_ml"}
 
 
+def test_filtre_alternance(con: duckdb.DuckDBPyConnection) -> None:
+    """La collecte est large : le filtre isole ou exclut l'alternance."""
+    cdi = {**offer("E", "2026-06-03T10:00:00Z", "75 - Paris", "SQL"),
+           "typeContrat": "CDI", "natureContrat": "Contrat travail"}
+    con.execute(
+        "INSERT INTO raw_offres VALUES (?, ?, 'synthetique', now())",
+        ["E", json.dumps(cdi, ensure_ascii=False)],
+    )
+    assert queries.kpis(con, Filters()).at[0, "offres"] == 5
+    assert queries.kpis(con, Filters(apprenticeship=True)).at[0, "offres"] == 4
+    hors = queries.kpis(con, Filters(apprenticeship=False)).iloc[0]
+    assert (hors["offres"], hors["part_alternance"]) == (1, 0.0)
+
+
 def test_les_semaines_vides_valent_zero(con: duckdb.DuckDBPyConnection) -> None:
     weekly = queries.weekly_offers(con, Filters(end=date(2026, 6, 30)))
     assert weekly["offres"].tolist() == [2, 0, 0, 1]

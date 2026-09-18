@@ -1,5 +1,14 @@
-# Matrice de collecte : chaque mot-clé est croisé avec chaque nature de contrat.
-# 9 mots-clés x 2 natures = 18 recherches.
+# Collecte large : une recherche par mot-clé, sans filtre de contrat. L'alternance
+# est isolée ensuite dans le dashboard, via la colonne est_alternance.
+#
+# Comportement de motsCles mesuré sur l'API le 2026-09-18 :
+# - les mots d'une expression sont cherchés séparément, puis combinés en ET, sans
+#   recherche d'expression exacte : espace, virgule et %20 donnent le même total
+#   (« data engineer » = 563, « data » = 1275, « engineer » = 893) ;
+# - le tiret sépare aussi les mots : « no-code » = « no code » = 10 ;
+# - la forme soudée ne matche rien : « nocode », « lowcode », « powerapps » = 0.
+# Zéros vérifiés sous toutes leurs variantes, donc écartés : zapier,
+# power automate, airtable, make.com.
 
 defaults:
   # 150 est le maximum accepté par l'API : au-delà elle répond 400.
@@ -12,15 +21,32 @@ defaults:
   lookback_days: 365
 
 keywords:
+  # Data
   - data engineer
   - data analyst
   - data scientist
+  - data architect
+  - data manager
+  - big data
   - business intelligence
+  - power bi
+  - ingenieur donnees
+  - analyste donnees
+  - chef de projet data
+  # IA (« IA » seul est trop bruité : écarté)
+  - intelligence artificielle
   - machine learning
+  - deep learning
+  - mlops
+  - llm
+  # No-code / low-code
   - no-code
   - low-code
   - power platform
-  - automatisation
+  - power apps
+  - rpa
+  - n8n
+  - bubble
 
 # Bornes de vraisemblance des salaires annualisés, vérifiées par les tests.
 # SMIC brut annuel sur une base 35h : 11,88 €/h x 35 x 52 = 21 621,60 €.
@@ -32,12 +58,3 @@ salaire:
   smic_annuel: 21621.60
   ratio_plancher_alternance: 0.27
   plafond_annuel: 300000
-
-# Libellés relevés dans /referentiel/naturesContrats le 2026-09-08.
-# collect.py revérifie ces codes à chaque exécution et s'arrête si l'un d'eux
-# disparaît du référentiel.
-contract_natures:
-  - code: E2
-    label: "Contrat apprentissage"
-  - code: FS
-    label: "Cont. professionnalisation"

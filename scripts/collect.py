@@ -1,4 +1,7 @@
-"""Collect France Travail alternance offers for every search in config/queries.yaml.
+"""Collect France Travail offers, every contract type, for each keyword in config/queries.yaml.
+
+Collection is deliberately wide: alternance is not filtered here but flagged
+later by the ``est_alternance`` column, and isolated in the dashboard.
 
 Usage:
     python scripts/collect.py --dry-run
@@ -27,66 +30,36 @@ from src.ingest.tls import enable_system_trust_store  # noqa: E402
 logger = logging.getLogger("collect")
 
 DEFAULT_CONFIG = PROJECT_ROOT / "config" / "queries.yaml"
-NATURE_REFERENTIEL = "naturesContrats"
 
 
 def load_config(path: Path) -> dict[str, Any]:
-    """Read the collection matrix from a YAML file."""
+    """Read the collection settings from a YAML file."""
     with path.open(encoding="utf-8") as handle:
         config = yaml.safe_load(handle)
-    for key in ("keywords", "contract_natures"):
-        if not config.get(key):
-            raise ValueError(f"{path} is missing the '{key}' section")
+    if not config.get("keywords"):
+        raise ValueError(f"{path} is missing the 'keywords' section")
     return config
 
 
 def build_searches(config: dict[str, Any]) -> list[dict[str, str]]:
-    """Return the cartesian product of keywords and contract natures."""
-    return [
-        {"motsCles": keyword, "natureContrat": nature["code"]}
-        for keyword in config["keywords"]
-        for nature in config["contract_natures"]
-    ]
-
-
-def verify_contract_natures(
-    client: FranceTravailClient, config: dict[str, Any]
-) -> dict[str, str]:
-    """Check the configured codes against the live referentiel, or abort.
-
-    Guards against the project rule of never inventing an API field: the codes
-    in queries.yaml are only assumed to mean "alternance" until the API itself
-    confirms their labels.
-    """
-    referentiel = client.get_referentiel(NATURE_REFERENTIEL)
-    labels = {str(item.get("code")): str(item.get("libelle")) for item in referentiel}
-    logger.info("Référentiel %s : %d codes disponibles", NATURE_REFERENTIEL, len(labels))
-
-    missing = [n["code"] for n in config["contract_natures"] if n["code"] not in labels]
-    if missing:
-        raise SystemExit(
-            f"Codes {missing} absents du référentiel {NATURE_REFERENTIEL}. "
-            f"Codes valides : {sorted(labels)}"
-        )
-    for nature in config["contract_natures"]:
-        logger.info("  %s → %s", nature["code"], labels[nature["code"]])
-    return labels
+    """Return one search per keyword, with no contract filter."""
+    return [{"motsCles": keyword} for keyword in config["keywords"]]
 
 
 TOTAL_LABEL = "Total (avec doublons)"
 
 
-def report(rows: list[tuple[str, str, int]], unique_ids: set[str]) -> None:
+def report(rows: list[tuple[str, int]], unique_ids: set[str]) -> None:
     """Print the per-search table and the headline unique-offer count."""
     width = max([len(row[0]) for row in rows] + [len(TOTAL_LABEL), len("Mots-clés")])
-    rule = "-" * (width + 18)
+    rule = "-" * (width + 10)
 
-    print(f"\n{'Mots-clés':<{width}}  {'Nature':<6}  Offres")
+    print(f"\n{'Mots-clés':<{width}}  Offres")
     print(rule)
-    for keywords, nature, count in rows:
-        print(f"{keywords:<{width}}  {nature:<6}  {count:>6}")
+    for keywords, count in rows:
+        print(f"{keywords:<{width}}  {count:>6}")
     print(rule)
-    print(f"{TOTAL_LABEL:<{width}}  {'':<6}  {sum(row[2] for row in rows):>6}")
+    print(f"{TOTAL_LABEL:<{width}}  {sum(row[1] for row in rows):>6}")
     print(f"\nOffres uniques collectées : {len(unique_ids)}")
 
 
@@ -100,24 +73,20 @@ def collect(args: argparse.Namespace) -> int:
     if args.dry_run:
         print(f"{len(searches)} recherches prévues :")
         for search in searches:
-            print(f"  - {search['motsCles']} / natureContrat={search['natureContrat']}")
+            print(f"  - {search['motsCles']}")
         return 0
 
     defaults = config.get("defaults", {})
     manifest = RunManifest()
     client = FranceTravailClient(manifest=manifest)
-    verify_contract_natures(client, config)
 
     max_results = args.max_results or defaults.get("max_results_per_search")
-    rows: list[tuple[str, str, int]] = []
+    rows: list[tuple[str, int]] = []
     unique_ids: set[str] = set()
 
     try:
         for index, search in enumerate(searches, start=1):
-            logger.info(
-                "[%d/%d] %s / %s",
-                index, len(searches), search["motsCles"], search["natureContrat"],
-            )
+            logger.info("[%d/%d] %s", index, len(searches), search["motsCles"])
             offers = client.search_offers(
                 max_results=max_results,
                 page_size=defaults.get("page_size", 150),
@@ -125,7 +94,7 @@ def collect(args: argparse.Namespace) -> int:
                 **search,
             )
             unique_ids.update(str(offer.get("id")) for offer in offers if offer.get("id"))
-            rows.append((search["motsCles"], search["natureContrat"], len(offers)))
+            rows.append((search["motsCles"], len(offers)))
     except FranceTravailAPIError as error:
         logger.error("Collecte interrompue : %s", error)
         return 1

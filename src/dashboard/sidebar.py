@@ -10,6 +10,13 @@ import streamlit as st
 from src.dashboard.filtering import Filters
 from src.dashboard.ui import family_label, family_order
 
+#: Libellé affiché → valeur transmise au filtre ``est_alternance``.
+APPRENTICESHIP_CHOICES: dict[str, bool | None] = {
+    "Toutes": None,
+    "Alternance uniquement": True,
+    "Hors alternance": False,
+}
+
 
 def _period(selection: Any, start: date, end: date) -> tuple[date | None, date | None]:
     """Réduire la saisie à ``(début, fin)`` ; l'étendue complète vaut « pas de filtre ».
@@ -36,6 +43,10 @@ def render(options: dict[str, Any]) -> Filters:
         contracts = st.multiselect(
             "Type de contrat", options["contracts"],
             placeholder="Tous les contrats", key="f_contrats",
+        )
+        apprenticeship = st.radio(
+            "Alternance", list(APPRENTICESHIP_CHOICES), horizontal=True, key="f_alternance",
+            help="Apprentissage ou contrat de professionnalisation.",
         )
 
         start, end = options["start"], options["end"]
@@ -64,4 +75,5 @@ def render(options: dict[str, Any]) -> Filters:
         start=chosen_start,
         end=chosen_end,
         families=tuple(families) or None,
+        apprenticeship=APPRENTICESHIP_CHOICES[apprenticeship],
     )

@@ -39,6 +39,8 @@ class Filters:
     start: date | None = None
     end: date | None = None
     families: tuple[str, ...] | None = None
+    #: ``True`` : alternance seule ; ``False`` : hors alternance ; ``None`` : toutes.
+    apprenticeship: bool | None = None
 
     def params(self) -> dict[str, Any]:
         """Paramètres nommés attendus par :data:`FILTERED_CTE`."""
@@ -48,6 +50,7 @@ class Filters:
             "debut": self.start,
             "fin": self.end,
             "familles": _as_list(self.families),
+            "alternance": self.apprenticeship,
         }
 
 
@@ -87,6 +90,7 @@ WITH filtrees AS (
            OR list_contains($contrats::VARCHAR[], coalesce(o.type_contrat, '{UNKNOWN_CONTRACT}')))
       AND ($debut::DATE IS NULL OR o.date_creation::DATE >= $debut::DATE)
       AND ($fin::DATE IS NULL OR o.date_creation::DATE <= $fin::DATE)
+      AND ($alternance::BOOLEAN IS NULL OR o.est_alternance = $alternance::BOOLEAN)
       AND ($familles::VARCHAR[] IS NULL OR o.id IN (
             SELECT c.offre_id
             FROM offre_competences c
