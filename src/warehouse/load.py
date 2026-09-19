@@ -15,6 +15,7 @@ import logging
 from pathlib import Path
 
 import duckdb
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RAW_DIR = PROJECT_ROOT / "data" / "raw"
 DEFAULT_DB_PATH = PROJECT_ROOT / "data" / "warehouse.duckdb"
 DEFAULT_MODELS_PATH = Path(__file__).with_name("models.sql")
+DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "queries.yaml"
 
 #: Only the offer pages. ``data/raw/_runs/`` holds run manifests, whose shape is
 #: entirely different, and the prefix keeps them out without a second filter.
@@ -89,10 +91,31 @@ def load_raw_offres(
     return loaded
 
 
+def load_salary_bounds(
+    con: duckdb.DuckDBPyConnection, config_path: Path = DEFAULT_CONFIG_PATH
+) -> None:
+    """Create the one-row ``ref_bornes_salaire`` table from ``config/queries.yaml``.
+
+    The ``offres`` view reads its plausibility bounds from this table, so the
+    YAML stays their single source, shared with the data-quality tests.
+    """
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    bounds = config["salaire"]
+    con.execute(
+        "CREATE OR REPLACE TABLE ref_bornes_salaire AS "
+        "SELECT ?::DOUBLE AS smic_annuel, ?::DOUBLE AS ratio_plancher_alternance, "
+        "?::DOUBLE AS plafond_annuel",
+        [bounds["smic_annuel"], bounds["ratio_plancher_alternance"], bounds["plafond_annuel"]],
+    )
+
+
 def apply_models(
-    con: duckdb.DuckDBPyConnection, sql_path: Path = DEFAULT_MODELS_PATH
+    con: duckdb.DuckDBPyConnection,
+    sql_path: Path = DEFAULT_MODELS_PATH,
+    config_path: Path = DEFAULT_CONFIG_PATH,
 ) -> None:
     """Run the SQL models, which create ``ref_regions`` and the ``offres`` view."""
+    load_salary_bounds(con, config_path)
     con.execute(sql_path.read_text(encoding="utf-8"))
     logger.info("Applied the SQL models from %s", sql_path)
 

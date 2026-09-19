@@ -71,12 +71,44 @@ def test_annualisation_du_salaire(
     if libelle is not None:
         offre["salaire"] = {"libelle": libelle}
 
+    # Le parser se vérifie sur le brut : plusieurs montants ci-dessus sont sous
+    # le SMIC exprès, et seraient écartés des colonnes filtrées.
     with synthetic_warehouse([offre]) as con:
         obtenu = con.execute(
-            "SELECT salaire_min_annuel, salaire_max_annuel FROM offres"
+            "SELECT salaire_min_brut, salaire_max_brut FROM offres"
         ).fetchone()
 
     assert obtenu == pytest.approx(attendu)
+
+
+@pytest.mark.parametrize(
+    ("libelle", "alternance", "attendu"),
+    [
+        ("Annuel de 45000.0 Euros", False, (45000.0, 45000.0, False)),
+        # Annuel saisi en mensuel : 32 000 x 12 dépasse le plafond.
+        ("Mensuel de 32000.0 Euros", False, (None, None, True)),
+        ("Horaire de 70000.0 Euros", False, (None, None, True)),
+        ("Annuel de 40.0 Euros à 50.0 Euros", False, (None, None, True)),
+        # Sous le SMIC mais au-dessus du plancher apprenti : légal en alternance.
+        ("Mensuel de 1000.0 Euros", True, (12000.0, 12000.0, False)),
+        ("Mensuel de 1000.0 Euros", False, (None, None, True)),
+        # Sans salaire, rien à écarter.
+        (None, False, (None, None, False)),
+    ],
+)
+def test_salaire_hors_bornes_ecarte(
+    libelle: str | None, alternance: bool, attendu: tuple[Any, Any, bool]
+) -> None:
+    offre: dict[str, Any] = {"id": "TEST1", "alternance": alternance}
+    if libelle is not None:
+        offre["salaire"] = {"libelle": libelle}
+
+    with synthetic_warehouse([offre]) as con:
+        obtenu = con.execute(
+            "SELECT salaire_min_annuel, salaire_max_annuel, salaire_hors_bornes FROM offres"
+        ).fetchone()
+
+    assert obtenu == attendu
 
 
 # ---------------------------------------------------- localisation et région
@@ -89,6 +121,11 @@ def test_annualisation_du_salaire(
         ({"libelle": "69 - Lyon"}, "69", "Auvergne-Rhône-Alpes"),
         ({"libelle": "974 - LA POSSESSION"}, "974", "La Réunion"),
         ({"libelle": "2A - Ajaccio"}, "2A", "Corse"),
+        # Cas réel : collectivité d'outre-mer à trois chiffres.
+        ({"libelle": "988 - Nouméa", "commune": "98818", "codePostal": "98800"},
+         "988", "Nouvelle-Calédonie"),
+        # Cas réel : « 99999 » veut dire « lieu non précisé », pas département 99.
+        ({"libelle": "France", "codePostal": "99999"}, None, None),
         # Le code INSEE prend le relais quand le libellé n'a pas de préfixe.
         ({"libelle": "Meylan", "commune": "38229"}, "38", "Auvergne-Rhône-Alpes"),
         # Puis le code postal.

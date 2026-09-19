@@ -29,7 +29,14 @@ FROM (VALUES
     ('Martinique',                 ['972']),
     ('Guyane',                     ['973']),
     ('La Réunion',                 ['974']),
-    ('Mayotte',                    ['976'])
+    ('Mayotte',                    ['976']),
+    -- Collectivités d'outre-mer : hors découpage régional, chacune à part.
+    ('Saint-Pierre-et-Miquelon',   ['975']),
+    ('Saint-Barthélemy',           ['977']),
+    ('Saint-Martin',               ['978']),
+    ('Wallis-et-Futuna',           ['986']),
+    ('Polynésie française',        ['987']),
+    ('Nouvelle-Calédonie',         ['988'])
 ) AS r(region, departements);
 
 CREATE OR REPLACE VIEW offres AS
@@ -52,7 +59,9 @@ WITH base AS (
         offre->>'$.description'       AS description,
         offre->>'$.lieuTravail.libelle'    AS lieu_libelle,
         offre->>'$.lieuTravail.commune'    AS code_insee,
-        offre->>'$.lieuTravail.codePostal' AS code_postal,
+        -- « 99999 » (libellé « France ») signifie « lieu non précisé » :
+        -- lu tel quel, il donnerait un faux département 99.
+        nullif(offre->>'$.lieuTravail.codePostal', '99999') AS code_postal,
         offre->>'$.salaire.libelle'        AS salaire_libelle
     FROM raw_offres
 ),
@@ -60,14 +69,14 @@ WITH base AS (
 -- Le département se lit d'abord dans le préfixe du libellé (« 75 - Paris »),
 -- seule source qui distingue la Corse (2A/2B) des codes numériques. À défaut,
 -- le code INSEE de la commune, puis le code postal. La branche outre-mer est
--- bornée à 97[1-6] : un 9[0-9]{2} plus large avalerait « 912 » dans le code
--- INSEE « 91272 ».
+-- bornée à 97[1-8] et 98[6-8] : un 9[0-9]{2} plus large avalerait « 912 »
+-- dans le code INSEE « 91272 ».
 localise AS (
     SELECT *,
         coalesce(
-            nullif(regexp_extract(coalesce(lieu_libelle, ''), '^(97[1-6]|2[AB]|[0-9]{2}) - ', 1), ''),
-            nullif(regexp_extract(coalesce(code_insee,  ''), '^(97[1-6]|2[AB]|[0-9]{2})',    1), ''),
-            nullif(regexp_extract(coalesce(code_postal, ''), '^(97[1-6]|[0-9]{2})',          1), '')
+            nullif(regexp_extract(coalesce(lieu_libelle, ''), '^(97[1-8]|98[6-8]|2[AB]|[0-9]{2}) - ', 1), ''),
+            nullif(regexp_extract(coalesce(code_insee,  ''), '^(97[1-8]|98[6-8]|2[AB]|[0-9]{2})',    1), ''),
+            nullif(regexp_extract(coalesce(code_postal, ''), '^(97[1-8]|98[6-8]|[0-9]{2})',          1), '')
         ) AS departement
     FROM base
 ),
@@ -114,6 +123,32 @@ annualise AS (
             WHEN 'Horaire' THEN coalesce(CASE WHEN sur_unite = 'heure' THEN quantite END, 35.0) * 52.0
         END AS facteur_annuel
     FROM converti
+),
+
+chiffre AS (
+    SELECT *,
+        round(least(montant_bas, coalesce(montant_haut, montant_bas)) * facteur_annuel, 2)
+            AS salaire_min_brut,
+        round(greatest(montant_bas, coalesce(montant_haut, montant_bas)) * facteur_annuel, 2)
+            AS salaire_max_brut
+    FROM annualise
+),
+
+-- Certaines offres annoncent un montant intenable : un annuel saisi en
+-- « Mensuel » (32 000 €/mois), un « Horaire de 70000 », un « Annuel de 40 ».
+-- Le parser les lit correctement ; c'est la saisie qui est fausse. Le salaire
+-- entier est alors écarté plutôt que corrigé à la main, et le brut reste
+-- consultable. Bornes : config/queries.yaml, via ref_bornes_salaire.
+borne AS (
+    SELECT c.*,
+        coalesce(
+            c.salaire_min_brut < CASE WHEN c.est_alternance
+                                      THEN b.smic_annuel * b.ratio_plancher_alternance
+                                      ELSE b.smic_annuel END
+            OR c.salaire_max_brut > b.plafond_annuel,
+            false) AS salaire_hors_bornes
+    FROM chiffre c
+    CROSS JOIN ref_bornes_salaire b
 )
 
 SELECT
@@ -128,13 +163,14 @@ SELECT
     -- ni code postal : le repli les rattrape.
     coalesce(par_departement.region, par_libelle.region) AS region,
     a.code_rome,
-    round(least(a.montant_bas, coalesce(a.montant_haut, a.montant_bas)) * a.facteur_annuel, 2)
-        AS salaire_min_annuel,
-    round(greatest(a.montant_bas, coalesce(a.montant_haut, a.montant_bas)) * a.facteur_annuel, 2)
-        AS salaire_max_annuel,
+    CASE WHEN NOT a.salaire_hors_bornes THEN a.salaire_min_brut END AS salaire_min_annuel,
+    CASE WHEN NOT a.salaire_hors_bornes THEN a.salaire_max_brut END AS salaire_max_annuel,
+    a.salaire_min_brut,
+    a.salaire_max_brut,
+    a.salaire_hors_bornes,
     a.experience,
     a.description
-FROM annualise a
+FROM borne a
 LEFT JOIN ref_regions par_departement USING (departement)
 LEFT JOIN (SELECT DISTINCT region FROM ref_regions) par_libelle
        ON par_libelle.region = a.lieu_libelle;

@@ -109,13 +109,13 @@ def test_toute_region_derivee_est_connue(warehouse: duckdb.DuckDBPyConnection) -
 def test_salaires_dans_des_bornes_vraisemblables(
     warehouse: duckdb.DuckDBPyConnection, bornes: dict[str, float]
 ) -> None:
-    """Aucun salaire annualisé sous le minimum légal ni au-dessus du plafond.
+    """Aucun salaire exposé au dashboard sous le minimum légal ni au-dessus du plafond.
 
     Le plancher suit le contrat : un apprenti est payé de 27 % à 100 % du SMIC,
-    donc appliquer le SMIC plein aux offres d'alternance signalerait des données
-    parfaitement légales. Ce test attrape ce qu'il doit attraper, une erreur du
-    parser : un montant mensuel pris pour un annuel, un taux horaire non
-    annualisé.
+    donc appliquer le SMIC plein aux offres d'alternance écarterait des données
+    parfaitement légales. Les saisies aberrantes sont écartées par la vue ; ce
+    test vérifie qu'aucune ne passe au travers, et :func:`test_peu_de_salaires_ecartes`
+    qu'on n'en écarte pas trop.
     """
     plancher_alternance = bornes["smic_annuel"] * bornes["ratio_plancher_alternance"]
     suspectes = warehouse.execute(
@@ -132,3 +132,19 @@ def test_salaires_dans_des_bornes_vraisemblables(
         [plancher_alternance, bornes["smic_annuel"], bornes["plafond_annuel"]],
     ).fetchall()
     assert suspectes == [], f"salaires hors bornes : {suspectes}"
+
+
+#: Part maximale de salaires écartés. Les saisies aberrantes des recruteurs en
+#: représentent quelques pour cent ; un bug du parser (un mensuel pris pour un
+#: annuel, par exemple) en écarterait bien davantage, et ferait échouer ce test.
+MAX_PART_ECARTEE = 0.05
+
+
+def test_peu_de_salaires_ecartes(warehouse: duckdb.DuckDBPyConnection) -> None:
+    """Écarter les aberrations ne doit pas masquer une erreur du parser."""
+    avec_salaire, ecartes = warehouse.execute(
+        "SELECT count(salaire_min_brut), count(*) FILTER (WHERE salaire_hors_bornes) "
+        "FROM offres"
+    ).fetchone()
+    part = ecartes / avec_salaire
+    assert part <= MAX_PART_ECARTEE, f"{ecartes}/{avec_salaire} salaires écartés ({part:.1%})"
