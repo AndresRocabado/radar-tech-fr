@@ -9,6 +9,9 @@ claude.md
 # conditions d'utilisation de France Travail.
 data/raw/
 
+# Rapports hebdomadaires : régénérables à tout moment avec python -m src.cli report.
+data/reports/
+
 # L'entrepôt et l'index vectoriel sont versionnés — voir
 # docs/adr/0003-donnees-versionnees-dans-le-depot.md : ils tiennent en quelques
 # mégaoctets et Streamlit Community Cloud n'a pas d'autre source de données.

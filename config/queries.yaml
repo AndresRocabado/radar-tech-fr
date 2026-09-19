@@ -58,3 +58,25 @@ salaire:
   smic_annuel: 21621.60
   ratio_plancher_alternance: 0.27
   plafond_annuel: 300000
+
+# Rapport hebdomadaire (python -m src.cli report) : la dernière semaine complète,
+# lundi-dimanche, selon la date de création des offres, comparée à la précédente.
+# Chaque valeur peut être surchargée en ligne de commande pour calibrer.
+rapport:
+  # Ce qui est comparé d'une semaine à l'autre :
+  # - part   : offres citant la compétence / offres publiées dans la semaine ;
+  # - volume : nombre brut d'offres citant la compétence.
+  # « part » par défaut : une collecte ponctuelle voit moins d'offres anciennes,
+  # déjà retirées de l'API, et le volume brut croît alors mécaniquement
+  # (collecte du 2026-09-18 : 361 offres la semaine du 31/08, 734 la suivante).
+  mesure: part
+  # Alerte quand la mesure croît strictement plus que ce pourcentage.
+  seuil_croissance_pct: 20
+  # En dessous de ce nombre d'offres la semaine précédente, un pourcentage ne
+  # veut rien dire (1 -> 2 = +100 %) : la compétence n'entre pas dans les alertes.
+  min_offres_semaine_precedente: 5
+  # Émergente : sous le minimum ci-dessus la semaine précédente, en hausse, et
+  # citée par au moins ce nombre d'offres cette semaine.
+  min_offres_emergente: 3
+  # Nombre maximal de compétences émergentes listées.
+  max_emergentes: 10

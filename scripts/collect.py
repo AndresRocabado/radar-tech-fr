@@ -15,36 +15,20 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-from typing import Any
-
-import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.ingest.france_travail import FranceTravailClient  # noqa: E402
 from src.ingest.rate_limit import FranceTravailAPIError  # noqa: E402
-from src.ingest.storage import RunManifest  # noqa: E402
+from src.ingest.run import (  # noqa: E402
+    DEFAULT_CONFIG_PATH,
+    build_searches,
+    load_config,
+    run_collection,
+)
 from src.ingest.tls import enable_system_trust_store  # noqa: E402
 
 logger = logging.getLogger("collect")
-
-DEFAULT_CONFIG = PROJECT_ROOT / "config" / "queries.yaml"
-
-
-def load_config(path: Path) -> dict[str, Any]:
-    """Read the collection settings from a YAML file."""
-    with path.open(encoding="utf-8") as handle:
-        config = yaml.safe_load(handle)
-    if not config.get("keywords"):
-        raise ValueError(f"{path} is missing the 'keywords' section")
-    return config
-
-
-def build_searches(config: dict[str, Any]) -> list[dict[str, str]]:
-    """Return one search per keyword, with no contract filter."""
-    return [{"motsCles": keyword} for keyword in config["keywords"]]
-
 
 TOTAL_LABEL = "Total (avec doublons)"
 
@@ -66,49 +50,28 @@ def report(rows: list[tuple[str, int]], unique_ids: set[str]) -> None:
 def collect(args: argparse.Namespace) -> int:
     """Run the whole collection and return a shell exit code."""
     config = load_config(args.config)
-    searches = build_searches(config)
-    if args.limit:
-        searches = searches[: args.limit]
 
     if args.dry_run:
+        searches = build_searches(config, args.limit)
         print(f"{len(searches)} recherches prévues :")
         for search in searches:
             print(f"  - {search['motsCles']}")
         return 0
 
-    defaults = config.get("defaults", {})
-    manifest = RunManifest()
-    client = FranceTravailClient(manifest=manifest)
-
-    max_results = args.max_results or defaults.get("max_results_per_search")
-    rows: list[tuple[str, int]] = []
-    unique_ids: set[str] = set()
-
     try:
-        for index, search in enumerate(searches, start=1):
-            logger.info("[%d/%d] %s", index, len(searches), search["motsCles"])
-            offers = client.search_offers(
-                max_results=max_results,
-                page_size=defaults.get("page_size", 150),
-                lookback_days=defaults.get("lookback_days", 365),
-                **search,
-            )
-            unique_ids.update(str(offer.get("id")) for offer in offers if offer.get("id"))
-            rows.append((search["motsCles"], len(offers)))
+        result = run_collection(config, args.limit, args.max_results)
     except FranceTravailAPIError as error:
         logger.error("Collecte interrompue : %s", error)
         return 1
-    finally:
-        manifest.write()
 
-    report(rows, unique_ids)
+    report(result.rows, result.unique_ids)
     return 0
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
     parser.add_argument("--dry-run", action="store_true", help="lister les recherches, sans appel")
     parser.add_argument("--limit", type=int, help="ne traiter que les N premières recherches")
     parser.add_argument("--max-results", type=int, help="plafond d'offres par recherche")

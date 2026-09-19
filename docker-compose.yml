@@ -1,0 +1,48 @@
+# n8n en local, pour automatiser la collecte et le rapport hebdomadaire.
+# Mode d'emploi : docs/automatisation.md.
+#
+#     docker compose up -d --build
+#     -> http://localhost:5678
+
+services:
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    image: radar-tech-fr/n8n:local
+    container_name: radar-n8n
+    restart: unless-stopped
+    # Exposé sur la boucle locale uniquement : l'interface n'est pas protégée
+    # par HTTPS et n'a pas à être joignable depuis le réseau.
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      TZ: Europe/Paris
+      # Fuseau des nœuds Schedule Trigger : 06:00 veut dire 06:00 à Paris.
+      GENERIC_TIMEZONE: Europe/Paris
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      # Le cookie « secure » exige HTTPS ; en local sur http il bloquerait la connexion.
+      N8N_SECURE_COOKIE: "false"
+      # Execute Command est désactivé par défaut depuis n8n 2.0 : c'est lui qui
+      # lance python -m src.cli, il faut donc le réactiver.
+      NODES_EXCLUDE: "[]"
+      # Le nœud « Read/Write Files from Disk » ne lit que ce dossier.
+      N8N_RESTRICT_FILE_ACCESS_TO: /workspace/data/reports
+      # Les expressions du workflow lisent les adresses e-mail ci-dessous via $env.
+      # Le conteneur ne reçoit aucun secret : les identifiants France Travail
+      # sont lus par le code Python dans /workspace/.env, jamais par n8n.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      # Valeurs lues dans le .env du dépôt par docker compose (interpolation).
+      RAPPORT_EMAIL_DE: ${RAPPORT_EMAIL_DE:?à définir dans .env}
+      RAPPORT_EMAIL_A: ${RAPPORT_EMAIL_A:?à définir dans .env}
+    volumes:
+      # Workflows, identifiants SMTP chiffrés, historique d'exécution et clé de
+      # chiffrement : tout ce qui doit survivre à un docker compose down.
+      - n8n_data:/home/node/.n8n
+      # Le dépôt : code, config, data/raw, entrepôt et rapports.
+      - ./:/workspace
+
+volumes:
+  n8n_data:

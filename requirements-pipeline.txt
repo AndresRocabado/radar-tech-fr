@@ -1,0 +1,12 @@
+# Dépendances des seules commandes de src/cli.py (ingest, load, report), celles
+# qu'installe l'image n8n (Dockerfile.n8n). Ni Streamlit ni la pile ML : torch
+# pèserait ~2 Go dans une image qui n'en a pas besoin. load --embeddings, qui en
+# dépend, reste à lancer depuis l'environnement de développement.
+#
+# Versions alignées sur requirements.txt et requirements-dev.txt.
+
+duckdb==1.5.5
+PyYAML==6.0.3
+requests==2.34.2
+python-dotenv==1.2.3
+typer==0.27.2

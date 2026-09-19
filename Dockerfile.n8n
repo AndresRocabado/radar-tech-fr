@@ -1,0 +1,27 @@
+# Image n8n standard, plus un Python pour que les nœuds « Execute Command »
+# puissent lancer python -m src.cli. Choix et alternative écartée :
+# docs/adr/0004-python-dans-l-image-n8n.md.
+#
+# Le code n'est pas copié dans l'image : le dépôt est monté sur /workspace par
+# docker-compose.yml, si bien qu'une modification du code ne demande pas de
+# reconstruire. Seules les dépendances sont figées ici.
+
+# À épingler sur la version effectivement testée après le premier build.
+ARG N8N_VERSION=latest
+FROM n8nio/n8n:${N8N_VERSION}
+
+USER root
+
+# L'image n8n est basée sur Alpine. Un environnement virtuel isole les paquets
+# du Python système (PEP 668 interdit un pip install global sur Alpine).
+RUN apk add --no-cache python3 py3-pip
+COPY requirements-pipeline.txt /tmp/requirements-pipeline.txt
+RUN python3 -m venv /opt/radar \
+    && /opt/radar/bin/pip install --no-cache-dir -r /tmp/requirements-pipeline.txt \
+    && rm /tmp/requirements-pipeline.txt
+
+# « python » désigne désormais celui de l'environnement virtuel, dans les
+# commandes du workflow comme dans un docker compose exec.
+ENV PATH="/opt/radar/bin:${PATH}"
+
+USER node

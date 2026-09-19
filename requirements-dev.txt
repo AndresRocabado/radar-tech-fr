@@ -12,6 +12,9 @@ requests==2.34.2
 # Taxonomie de compétences : data/skills_taxonomy.yaml et config/queries.yaml.
 PyYAML==6.0.3
 
+# Ligne de commande appelée par n8n (src/cli.py).
+typer==0.27.2
+
 # Vérification TLS contre le magasin de certificats du système : nécessaire
 # derrière un antivirus ou un proxy qui inspecte le HTTPS, inutile en ligne.
 # L'import est optionnel (src/ingest/tls.py) : son absence ne casse rien.
