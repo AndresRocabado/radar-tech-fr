@@ -3,7 +3,7 @@
 **Quelles compétences data, IA et no-code les entreprises françaises recrutent-elles vraiment, et où ?**
 Un observatoire construit sur 2 789 offres réelles de l'API France Travail, mis à jour automatiquement.
 
-👉 **[Voir la démo en ligne](https://<à-compléter>.streamlit.app)** : sans inscription, sans installation.
+**[Voir la démo en ligne](https://radar-tech-fr.streamlit.app/)** : sans inscription, sans installation.
 
 ![Le dashboard Radar Tech FR](docs/img/dashboard.png)
 
@@ -91,12 +91,3 @@ L'automatisation n8n est décrite dans [docs/automatisation.md](docs/automatisat
 - Compléter la taxonomie par une extraction de compétences par NER, afin de détecter les technologies émergentes.
 - Séparer le pipeline dans un conteneur de travail et ajouter une CI GitHub Actions (tests et reconstruction des données).
 
-## Lien avec le RNCP 42324
-
-*Expert en solutions et transformation no code/low code* (ESTIAM, [fiche France Compétences](https://www.francecompetences.fr/recherche/rncp/42324/)).
-
-| Bloc de compétences | Ce que le projet démontre |
-|---|---|
-| **BC01** : définir la stratégie d'intégration du no code/low code dans la transformation d'une organisation | Analyse du marché no-code/low-code (page « No-code & IA »), arbitrage documenté entre no-code et code dans les ADR, gouvernance des données : aucun secret dans le dépôt, brut France Travail non redistribué. |
-| **BC02** : déployer des solutions no code/low code performantes, interopérables et sécurisées | Workflow n8n qui orchestre la collecte et le rapport e-mail, interopérabilité par un contrat JSON avec la CLI Python, assistant IA intégré, interface exposée uniquement en local et identifiants chiffrés. |
-| **BC03** : piloter les projets no code/low code complexes | Découpage en étapes livrées en commits conventionnels, décisions tracées dans des ADR avec leurs conditions de révision, suivi de la performance par le rapport hebdomadaire et ses alertes. |
