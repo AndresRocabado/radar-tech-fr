@@ -13,7 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         # Le plancher déclaré dans pyproject.toml, et la version suivante.
-        python-version: ["3.11", "3.12"]
+        # 3.11 est exclue : numpy 2.5 et scipy 1.18 exigent 3.12.
+        python-version: ["3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v5

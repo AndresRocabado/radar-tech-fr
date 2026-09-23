@@ -67,7 +67,7 @@ Autres décisions documentées : [recherche vectorielle en numpy](docs/adr/0001-
 
 ## Lancer en local
 
-Python 3.11 ou plus récent.
+Python 3.12 ou plus récent.
 
 ```bash
 git clone https://github.com/AndresRocabado/radar-tech-fr && cd radar-tech-fr

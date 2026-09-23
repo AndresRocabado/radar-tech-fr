@@ -8,9 +8,10 @@ version = "1.0.0"
 description = "Observatoire du marché de l'emploi tech en France, sur l'API France Travail."
 readme = "README.md"
 license = { file = "LICENSE" }
-# 3.11 au minimum : c'est le plancher des versions épinglées dans
-# requirements.txt (pandas 3, numpy 2.5). La CI vérifie 3.11 et 3.12.
-requires-python = ">=3.11"
+# 3.12 au minimum : le plancher vient des versions épinglées dans
+# requirements.txt, numpy 2.5 et scipy 1.18 exigeant toutes deux `>=3.12`.
+# La CI vérifie 3.12 et 3.13.
+requires-python = ">=3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

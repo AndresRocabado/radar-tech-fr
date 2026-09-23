@@ -21,9 +21,10 @@ réelles et couvert par 183 tests.
 
 ### Ajouté
 
-- `pyproject.toml` : version minimale de Python (3.11) et configuration de
-  pytest, qui se lance maintenant depuis n'importe quel dossier.
-- Intégration continue GitHub Actions sur Python 3.11 et 3.12, avec le badge
+- `pyproject.toml` : version minimale de Python (3.12, imposée par numpy et
+  scipy) et configuration de pytest, qui se lance maintenant depuis n'importe
+  quel dossier.
+- Intégration continue GitHub Actions sur Python 3.12 et 3.13, avec le badge
   correspondant en tête du README.
 - `src/nlp/nocode.py` : source unique de la famille no-code et du suffixe
   « (terme générique) », auparavant recopiés dans deux modules.
