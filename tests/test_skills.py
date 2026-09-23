@@ -18,6 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.nlp import skills, taxonomy as taxonomy_module  # noqa: E402
+from src.nlp.nocode import GENERIC_MARKER, GENERIC_TERM, NOCODE_FAMILY  # noqa: E402
 from src.nlp.report import nocode_share, top_skills  # noqa: E402
 from src.nlp.taxonomy import Taxonomy  # noqa: E402
 from src.warehouse.load import apply_models as apply_warehouse_models  # noqa: E402
@@ -60,6 +61,29 @@ def test_un_label_en_double_est_refuse(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Python"):
         Taxonomy.load(fichier)
+
+
+def test_les_constantes_nocode_collent_au_dictionnaire(taxo: Taxonomy) -> None:
+    """``src/nlp/nocode.py`` doit décrire le YAML tel qu'il est vraiment.
+
+    Ces deux chaînes voyagent jusqu'à un ``LIKE`` SQL dans le rapport et dans
+    le dashboard. Un ``LIKE`` qui ne correspond plus ne lève pas : il compte
+    zéro. Sans ce test, renommer la famille ou le suffixe « (terme générique) »
+    dans le dictionnaire viderait silencieusement la page « No-code & IA ».
+    """
+    assert NOCODE_FAMILY in taxo.families
+
+    generiques = [
+        skill.label
+        for skill in taxo.skills
+        if skill.family == NOCODE_FAMILY and GENERIC_MARKER in skill.label
+    ]
+    assert generiques, (
+        f"aucun label de la famille {NOCODE_FAMILY} ne porte « {GENERIC_MARKER} » : "
+        "les requêtes qui séparent outils nommés et termes génériques comptent zéro"
+    )
+    # Le motif LIKE doit retrouver exactement ces labels-là.
+    assert GENERIC_TERM == f"%{GENERIC_MARKER}%"
 
 
 def test_les_quinze_outils_nocode_demandes_sont_couverts(taxo: Taxonomy) -> None:

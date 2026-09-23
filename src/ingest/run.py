@@ -1,7 +1,7 @@
 """One collection run over every keyword of ``config/queries.yaml``.
 
-Shared by ``scripts/collect.py`` and the ``ingest`` command of ``src/cli.py``,
-so both entry points collect exactly the same way.
+Driven by the ``ingest`` command of ``src/cli.py``, the single entry point for
+collection — the one n8n calls and the one documented in the README.
 """
 
 from __future__ import annotations

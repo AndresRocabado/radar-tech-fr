@@ -29,7 +29,7 @@ from src.report.weekly import (
     generate,
     last_complete_week,
 )
-from src.warehouse.load import build_warehouse
+from src.warehouse.load import EmptyRawDirectoryError, build_warehouse
 
 logger = logging.getLogger("radar")
 
@@ -90,6 +90,9 @@ def ingest(
         "recherches": len(result.rows),
         "offres_collectees": sum(count for _, count in result.rows),
         "offres_uniques": len(result.unique_ids),
+        # Le détail par mots-clés, pour repérer une recherche qui ne ramène
+        # plus rien sans avoir à relire le journal.
+        "par_recherche": dict(result.rows),
         "manifeste": result.manifest_path,
     })
 
@@ -101,7 +104,13 @@ def load(
     ] = False,
 ) -> None:
     """Reconstruire l'entrepôt DuckDB et la table des compétences depuis data/raw/."""
-    offers = build_warehouse()
+    try:
+        offers = build_warehouse()
+    except EmptyRawDirectoryError as error:
+        # Sortie non nulle : le nœud n8n s'arrête là plutôt que d'enchaîner sur
+        # un entrepôt vide.
+        logger.error("%s", error)
+        raise typer.Exit(code=1) from error
     # raw_offres has just been rebuilt: offre_competences must follow, or it
     # would describe the previous load.
     skills = build_skills()

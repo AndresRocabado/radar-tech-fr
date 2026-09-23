@@ -98,14 +98,6 @@ class FranceTravailClient:
             raise FranceTravailAPIError(response.status_code, response.text, url)
         return response
 
-    def get_referentiel(self, name: str) -> list[dict[str, Any]]:
-        """Return one of the API reference lists, e.g. ``naturesContrats``.
-
-        Lets callers validate contract codes against the live API instead of
-        hardcoding values that may drift.
-        """
-        return self.get(f"/referentiel/{name}", params={}).json()
-
     def search_offers(
         self,
         *,

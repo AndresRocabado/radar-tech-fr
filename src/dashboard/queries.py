@@ -14,16 +14,13 @@ import duckdb
 import pandas as pd
 
 from src.dashboard.filtering import FILTERED_CTE, UNKNOWN_CONTRACT, UNKNOWN_REGION, Filters
-from src.nlp.report import NOCODE_FAMILY
+from src.nlp.nocode import GENERIC_TERM, NOCODE_FAMILY
 
 AI_FAMILY = "ia_ml"
 TOP_SKILLS_LIMIT = 15
 TOOLS_PER_FAMILY = 5
 #: En dessous, un salaire médian ne dit rien et l'écart n'est pas calculé.
 MIN_SALARY_SAMPLE = 5
-#: Même convention que ``src/nlp/report.py`` : « no-code » ou « low-code »
-#: nomment une pratique, pas un outil.
-GENERIC_TERM = "%(terme générique)%"
 
 Query = Callable[[duckdb.DuckDBPyConnection, Filters], pd.DataFrame]
 

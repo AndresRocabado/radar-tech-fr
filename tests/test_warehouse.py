@@ -19,7 +19,12 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.warehouse.load import build_warehouse, load_raw_offres, raw_files  # noqa: E402
+from src.warehouse.load import (  # noqa: E402
+    EmptyRawDirectoryError,
+    build_warehouse,
+    load_raw_offres,
+    raw_files,
+)
 
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 CONFIG_PATH = PROJECT_ROOT / "config" / "queries.yaml"
@@ -71,6 +76,30 @@ def test_rechargement_idempotent(tmp_path: Path) -> None:
             "SELECT count(*), count(DISTINCT id) FROM offres"
         ).fetchone()
     assert total == distincts == second
+
+
+def test_un_dossier_brut_vide_ne_detruit_pas_l_entrepot(tmp_path: Path) -> None:
+    """Recharger sans page brute doit échouer, pas vider l'entrepôt versionné.
+
+    ``data/raw/`` est ignoré par Git alors que ``data/warehouse.duckdb`` est
+    versionné : après un clone, le second existe sans le premier. Un
+    ``CREATE OR REPLACE`` lancé dans cet état remplaçait les offres par rien,
+    et les pages qui auraient permis de revenir en arrière sont justement
+    celles qui manquent.
+    """
+    if not raw_files(RAW_DIR):
+        pytest.skip(f"aucune page brute dans {RAW_DIR}")
+    db_path = tmp_path / "entrepot.duckdb"
+    attendu = build_warehouse(db_path=db_path, raw_dir=RAW_DIR)
+    assert attendu > 0
+
+    vide = tmp_path / "vide"
+    vide.mkdir()
+    with pytest.raises(EmptyRawDirectoryError):
+        build_warehouse(db_path=db_path, raw_dir=vide)
+
+    with duckdb.connect(str(db_path), read_only=True) as con:
+        assert con.execute("SELECT count(*) FROM offres").fetchone()[0] == attendu
 
 
 def test_les_pages_brutes_contiennent_des_doublons() -> None:

@@ -1,5 +1,7 @@
 # Radar Tech FR
 
+[![tests](https://github.com/AndresRocabado/radar-tech-fr/actions/workflows/tests.yml/badge.svg)](https://github.com/AndresRocabado/radar-tech-fr/actions/workflows/tests.yml)
+
 **Quelles compétences data, IA et no-code les entreprises françaises recrutent-elles vraiment, et où ?**
 Un observatoire construit sur 2 789 offres réelles de l'API France Travail, mis à jour automatiquement.
 
@@ -65,6 +67,8 @@ Autres décisions documentées : [recherche vectorielle en numpy](docs/adr/0001-
 
 ## Lancer en local
 
+Python 3.11 ou plus récent.
+
 ```bash
 git clone https://github.com/AndresRocabado/radar-tech-fr && cd radar-tech-fr
 python -m venv .venv && source .venv/bin/activate    # Windows : .venv\Scripts\activate
@@ -74,7 +78,11 @@ streamlit run app.py
 
 Aucune clé n'est nécessaire : l'entrepôt est fourni et l'assistant tourne en mode hors ligne.
 Pour collecter de nouvelles offres, copier `.env.example` en `.env`, installer `requirements-dev.txt` et lancer `python -m src.cli ingest` puis `load`.
-L'automatisation n8n est décrite dans [docs/automatisation.md](docs/automatisation.md), et les tests se lancent avec `pytest`.
+L'automatisation n8n est décrite dans [docs/automatisation.md](docs/automatisation.md).
+Les tests se lancent avec `pytest`, après `pip install -r requirements-dev.txt`.
+
+> `python -m src.cli load` reconstruit l'entrepôt depuis `data/raw/`, qui n'est pas versionné.
+> Sans page brute, la commande s'arrête avec une erreur plutôt que de vider `data/warehouse.duckdb` : collectez d'abord avec `ingest`.
 
 ## Limites connues
 

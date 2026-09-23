@@ -1,0 +1,19 @@
+# Métadonnées et configuration des outils. Le projet est une application, pas
+# une bibliothèque : ce fichier ne sert pas à construire un paquet, mais à
+# déclarer la version de Python attendue et à configurer pytest en un endroit.
+
+[project]
+name = "radar-tech-fr"
+version = "1.0.0"
+description = "Observatoire du marché de l'emploi tech en France, sur l'API France Travail."
+readme = "README.md"
+license = { file = "LICENSE" }
+# 3.11 au minimum : c'est le plancher des versions épinglées dans
+# requirements.txt (pandas 3, numpy 2.5). La CI vérifie 3.11 et 3.12.
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# La racine du dépôt sur le sys.path : `pytest` marche alors depuis n'importe
+# quel dossier, sans que chaque fichier de test ait à la bricoler lui-même.
+pythonpath = ["."]

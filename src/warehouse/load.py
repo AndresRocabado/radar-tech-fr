@@ -29,6 +29,17 @@ DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "queries.yaml"
 #: entirely different, and the prefix keeps them out without a second filter.
 RAW_GLOB = "offres_*.json"
 
+
+class EmptyRawDirectoryError(RuntimeError):
+    """Raised when there is nothing to load, so the warehouse is left untouched.
+
+    ``data/raw/`` is gitignored while ``data/warehouse.duckdb`` is versioned, so
+    a fresh clone has the warehouse but no pages to rebuild it from. Loading
+    anyway would replace 2 789 offers with none, and the raw pages needed to
+    undo that are exactly the ones that are missing.
+    """
+
+
 _CREATE_RAW_TABLE = """
 CREATE OR REPLACE TABLE raw_offres (
     id VARCHAR PRIMARY KEY,
@@ -77,14 +88,22 @@ def load_raw_offres(
 
     Returns:
         The number of distinct offers loaded.
-    """
-    con.execute(_CREATE_RAW_TABLE)
 
+    Raises:
+        EmptyRawDirectoryError: ``raw_dir`` holds no page. The table is left
+            alone, since replacing it would destroy the versioned warehouse.
+    """
+    # Checked before CREATE OR REPLACE, not after: the statement drops the
+    # existing table, so an empty raw directory would empty the warehouse.
     files = raw_files(raw_dir)
     if not files:
-        logger.warning("No raw page matching %s in %s", RAW_GLOB, raw_dir)
-        return 0
+        raise EmptyRawDirectoryError(
+            f"Aucune page brute ({RAW_GLOB}) dans {raw_dir} : l'entrepôt n'a pas "
+            f"été touché. Collectez d'abord les offres avec "
+            f"`python -m src.cli ingest`."
+        )
 
+    con.execute(_CREATE_RAW_TABLE)
     con.execute(_INSERT_RAW_OFFERS, [str(raw_dir / RAW_GLOB)])
     loaded = con.execute("SELECT count(*) FROM raw_offres").fetchone()[0]
     logger.info("Loaded %d distinct offers from %d raw pages", loaded, len(files))

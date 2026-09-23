@@ -112,10 +112,6 @@ class WeeklyReport:
     emerging: list[SkillTrend]
 
     @property
-    def previous_week_start(self) -> date:
-        return self.week_start - timedelta(weeks=1)
-
-    @property
     def week_end(self) -> date:
         return self.week_start + timedelta(days=6)
 
