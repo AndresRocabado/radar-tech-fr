@@ -2,6 +2,8 @@
 
 - **Statut** : acceptée
 - **Date** : 2026-09-14
+- **Note** : les tailles du corps datent de la décision (55 offres). Voir la
+  [mise à jour du 24/09/2026](#mise-à-jour--2026-09-24) en fin de document.
 
 ## Contexte
 
@@ -78,3 +80,25 @@ de quelques rechargements, le coût est sans conséquence.
   l'entrepôt publié, ce qui en retire l'essentiel du poids, ou basculer sur
   l'option 3 (téléchargement au démarrage, mis en cache par
   `st.cache_resource`).
+
+## Mise à jour — 2026-09-24
+
+Les tailles ci-dessus datent de la décision, quand la collecte comptait
+55 offres. Elle en compte 2 789 : le texte original est conservé, seuls les
+chiffres sont repris ici.
+
+| Fichier                    | À la décision | Aujourd'hui | Rôle                          |
+|----------------------------|--------------:|------------:|-------------------------------|
+| `data/warehouse.duckdb`    |       2,26 Mo | **30,3 Mo** | 2 789 offres, 8 907 liens     |
+| `data/embeddings.npy`      |         83 Ko |  **4,1 Mo** | 2 789 vecteurs de 384 dim.    |
+| `data/embeddings_ids.json` |         605 o |   **30 Ko** | l'id de chaque ligne          |
+
+**L'estimation de densité était pessimiste d'un facteur 4.** Le seuil annonçait
+~43 Ko par offre, donc 100 Mo vers 2 300 offres — un seuil qui aurait déjà dû
+être franchi. La densité mesurée est de **11,1 Ko par offre** : DuckDB compresse
+le JSON de `raw_offres` bien mieux à 2 789 offres qu'à 55, où l'en-tête du
+fichier pesait l'essentiel. Le seuil de 100 Mo est donc attendu vers
+**~9 200 offres**, et la décision n'a pas à être réévaluée maintenant.
+
+Le dépôt lui-même pèse 18 Mo de `.git`, pour 3 versions de l'entrepôt dans
+l'historique. C'est le coût annoncé du binaire versionné, et il reste modeste.

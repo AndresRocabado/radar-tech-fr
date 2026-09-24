@@ -2,6 +2,8 @@
 
 - **Statut** : acceptée
 - **Date** : 2026-09-11
+- **Note** : les chiffres du corps datent de la décision (55 offres). Voir la
+  [mise à jour du 24/09/2026](#mise-à-jour--2026-09-24) en fin de document.
 
 ## Contexte
 
@@ -71,3 +73,21 @@ aux requêtes géographiques (« en région lyonnaise »).
 
 Coût mesuré : 0,10 s par offre sur CPU, soit ~6 s pour la collecte actuelle et
 ~17 min pour 10 000 offres. Le calcul se fait par lots, hors du dashboard.
+
+## Mise à jour — 2026-09-24
+
+Les chiffres ci-dessus datent de la décision, quand la collecte comptait
+55 offres. Elle en compte 2 789, et la décision tient : l'index fait
+2 789 × 384 en `float32`, soit 4,1 Mo en mémoire, et une requête **mesurée à
+0,14 ms** — produit matriciel et tri compris. C'est trois ordres de grandeur en
+dessous de l'encodage de la requête elle-même, qui reste le seul coût visible à
+l'écran.
+
+La reconstruction complète de l'index demande désormais ~4,6 min de CPU
+(0,10 s par offre, inchangé), contre ~6 s à l'époque. C'est ce qui justifie que
+n8n ne la déclenche pas et qu'elle reste une commande lancée à la main.
+
+Le seuil de réévaluation ne bouge pas : il se situe toujours au-delà de quelques
+centaines de milliers d'offres, là où la recherche exhaustive cesserait d'être
+imperceptible. La mesure de 100 000 offres du tableau ci-dessus (14 ms) reste la
+référence.
