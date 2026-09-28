@@ -1,7 +1,15 @@
 # ADR 0004 — Automatisation : Python dans l'image n8n plutôt qu'un conteneur de travail séparé
 
-- **Statut** : acceptée
+- **Statut** : remplacée par l'[ADR 0005](0005-conteneur-radar-worker.md)
+  le 2026-09-28
 - **Date** : 2026-09-19
+
+> **Ce qui s'est passé.** La condition « l'image n8n n'accepte plus
+> l'installation de Python » listée en fin de document s'est réalisée dès la
+> première mise en service : l'image officielle est devenue une *Docker
+> Hardened Image*, sans `apk`, et le build a échoué. La décision est passée à
+> l'option 2 ci-dessous, le conteneur `radar-worker`. Le document reste ici tel
+> qu'il a été écrit, comme trace du raisonnement.
 
 ## Contexte
 

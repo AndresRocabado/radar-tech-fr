@@ -1,17 +1,18 @@
 {
+  "id": "radarTechFRpipe1",
   "name": "Radar Tech FR — collecte quotidienne et rapport hebdomadaire",
   "nodes": [
     {
       "parameters": {
-        "content": "## Radar Tech FR\n**Chaque jour, 06:00** : collecte France Travail puis reconstruction de l'entrepôt DuckDB.\n\n**Chaque lundi, 07:00** : rapport de la semaine écoulée, envoyé par e-mail.\n\nLes deux branches communiquent par l'entrepôt `data/warehouse.duckdb`.\nDocumentation : `docs/automatisation.md`.",
-        "height": 220,
+        "content": "## Radar Tech FR\n**Chaque jour, 06:00** : collecte France Travail puis reconstruction de l'entrepôt DuckDB.\n\n**Chaque lundi, 07:00** : rapport de la semaine écoulée, envoyé par e-mail.\n\nn8n orchestre, le conteneur `radar-worker` calcule. Les deux branches communiquent par l'entrepôt `data/warehouse.duckdb`.\nDocumentation : `docs/automatisation.md`.",
+        "height": 240,
         "width": 420
       },
       "id": "0b7c6f0e-6a55-4d0e-9a39-2f1b1c9d0a01",
       "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [0, -260]
+      "position": [0, -280]
     },
     {
       "parameters": {
@@ -32,22 +33,30 @@
     },
     {
       "parameters": {
-        "command": "cd /workspace && python -m src.cli ingest"
+        "method": "POST",
+        "url": "http://radar-worker:8000/ingest",
+        "options": {
+          "timeout": 3600000
+        }
       },
       "id": "2a8e1b7c-5d3f-4e9a-b1c0-7e3f8d0c2b03",
       "name": "Ingest",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [240, 0]
     },
     {
       "parameters": {
-        "command": "cd /workspace && python -m src.cli load"
+        "method": "POST",
+        "url": "http://radar-worker:8000/load",
+        "options": {
+          "timeout": 1800000
+        }
       },
       "id": "3b9f2c8d-6e4a-4fab-c2d1-8f4a9e1d3c04",
       "name": "Load",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [480, 0]
     },
     {
@@ -69,50 +78,22 @@
     },
     {
       "parameters": {
-        "command": "cd /workspace && python -m src.cli report"
+        "method": "POST",
+        "url": "http://radar-worker:8000/report",
+        "options": {
+          "timeout": 600000
+        }
       },
       "id": "5d1b4e0f-8a6c-4b1d-e4f3-0b6c1a3f5e06",
       "name": "Report",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [240, 260]
     },
     {
       "parameters": {
-        "jsCode": "// src/cli.py écrit une seule ligne JSON sur stdout ; les journaux vont sur stderr.\nreturn $input.all().map(item => {\n  const lines = item.json.stdout.trim().split('\\n');\n  return { json: JSON.parse(lines[lines.length - 1]) };\n});"
-      },
-      "id": "6e2c5f1a-9b7d-4c2e-f5a4-1c7d2b4a6f07",
-      "name": "Lire la sortie",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [480, 260]
-    },
-    {
-      "parameters": {
-        "fileSelector": "={{ $json.markdown }}",
-        "options": {}
-      },
-      "id": "7f3d6a2b-0c8e-4d3f-a6b5-2d8e3c5b7a08",
-      "name": "Lire le rapport",
-      "type": "n8n-nodes-base.readWriteFile",
-      "typeVersion": 1,
-      "position": [720, 260]
-    },
-    {
-      "parameters": {
-        "operation": "text",
-        "options": {}
-      },
-      "id": "8a4e7b3c-1d9f-4e4a-b7c6-3e9f4d6c8b09",
-      "name": "Extraire le texte",
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [960, 260]
-    },
-    {
-      "parameters": {
         "mode": "markdownToHtml",
-        "markdown": "={{ $json.data }}",
+        "markdown": "={{ $json.contenu_markdown }}",
         "destinationKey": "html",
         "options": {
           "tables": true
@@ -122,13 +103,15 @@
       "name": "Markdown vers HTML",
       "type": "n8n-nodes-base.markdown",
       "typeVersion": 1,
-      "position": [1200, 260]
+      "position": [480, 260]
     },
     {
       "parameters": {
+        "resource": "email",
+        "operation": "send",
         "fromEmail": "={{ $env.RAPPORT_EMAIL_DE }}",
         "toEmail": "={{ $env.RAPPORT_EMAIL_A }}",
-        "subject": "={{ $('Lire la sortie').item.json.objet }}",
+        "subject": "={{ $('Report').item.json.objet }}",
         "emailFormat": "html",
         "html": "={{ $json.html }}",
         "options": {
@@ -139,7 +122,7 @@
       "name": "Envoi par email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [1440, 260]
+      "position": [720, 260]
     }
   ],
   "connections": {
@@ -153,15 +136,6 @@
       "main": [[{ "node": "Report", "type": "main", "index": 0 }]]
     },
     "Report": {
-      "main": [[{ "node": "Lire la sortie", "type": "main", "index": 0 }]]
-    },
-    "Lire la sortie": {
-      "main": [[{ "node": "Lire le rapport", "type": "main", "index": 0 }]]
-    },
-    "Lire le rapport": {
-      "main": [[{ "node": "Extraire le texte", "type": "main", "index": 0 }]]
-    },
-    "Extraire le texte": {
       "main": [[{ "node": "Markdown vers HTML", "type": "main", "index": 0 }]]
     },
     "Markdown vers HTML": {

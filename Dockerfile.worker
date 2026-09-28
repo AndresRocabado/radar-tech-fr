@@ -1,0 +1,27 @@
+# Conteneur radar-worker : les commandes du pipeline derrière une API HTTP,
+# que n8n appelle sur le réseau interne de docker-compose.
+# Choix d'architecture : docs/adr/0005-conteneur-radar-worker.md.
+#
+# Le code n'est pas copié dans l'image : le dépôt est monté sur /workspace par
+# docker-compose.yml, si bien qu'une modification du code ne demande pas de
+# reconstruire. Seules les dépendances sont figées ici.
+
+FROM python:3.12-slim
+
+WORKDIR /workspace
+
+COPY requirements-pipeline.txt /tmp/requirements-pipeline.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-pipeline.txt \
+    && rm /tmp/requirements-pipeline.txt
+
+# L'API n'a pas besoin des droits root, et les fichiers écrits dans le dépôt
+# monté (data/raw/, l'entrepôt, les rapports) appartiennent ainsi à l'uid 1000,
+# celui de l'utilisateur courant sous Linux comme sous Docker Desktop.
+RUN useradd --uid 1000 --create-home radar
+USER radar
+
+EXPOSE 8000
+
+# Un seul worker : les commandes sont des traitements par lots, jamais
+# concurrents, et deux « load » simultanés se disputeraient l'entrepôt.
+CMD ["uvicorn", "src.worker.api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

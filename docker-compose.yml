@@ -1,15 +1,16 @@
-# n8n en local, pour automatiser la collecte et le rapport hebdomadaire.
-# Mode d'emploi : docs/automatisation.md.
+# n8n et le worker du pipeline, en local, pour automatiser la collecte et le
+# rapport hebdomadaire. Mode d'emploi : docs/automatisation.md.
 #
 #     docker compose up -d --build
 #     -> http://localhost:5678
+#
+# n8n orchestre, radar-worker calcule : l'image n8n reste celle du projet
+# n8n, sans modification (docs/adr/0005-conteneur-radar-worker.md).
 
 services:
   n8n:
-    build:
-      context: .
-      dockerfile: Dockerfile.n8n
-    image: radar-tech-fr/n8n:local
+    # À épingler sur la version testée après la première mise en service.
+    image: n8nio/n8n:latest
     container_name: radar-n8n
     restart: unless-stopped
     # Exposé sur la boucle locale uniquement : l'interface n'est pas protégée
@@ -25,14 +26,9 @@ services:
       N8N_PROTOCOL: http
       # Le cookie « secure » exige HTTPS ; en local sur http il bloquerait la connexion.
       N8N_SECURE_COOKIE: "false"
-      # Execute Command est désactivé par défaut depuis n8n 2.0 : c'est lui qui
-      # lance python -m src.cli, il faut donc le réactiver.
-      NODES_EXCLUDE: "[]"
-      # Le nœud « Read/Write Files from Disk » ne lit que ce dossier.
-      N8N_RESTRICT_FILE_ACCESS_TO: /workspace/data/reports
       # Les expressions du workflow lisent les adresses e-mail ci-dessous via $env.
-      # Le conteneur ne reçoit aucun secret : les identifiants France Travail
-      # sont lus par le code Python dans /workspace/.env, jamais par n8n.
+      # Le conteneur ne reçoit aucun autre secret : les identifiants France
+      # Travail sont lus par le worker dans /workspace/.env, jamais par n8n.
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       # Valeurs lues dans le .env du dépôt par docker compose (interpolation).
       RAPPORT_EMAIL_DE: ${RAPPORT_EMAIL_DE:?à définir dans .env}
@@ -40,9 +36,35 @@ services:
     volumes:
       # Workflows, identifiants SMTP chiffrés, historique d'exécution et clé de
       # chiffrement : tout ce qui doit survivre à un docker compose down.
+      # Le dépôt, lui, n'est pas monté ici : n8n n'a rien à y lire.
       - n8n_data:/home/node/.n8n
-      # Le dépôt : code, config, data/raw, entrepôt et rapports.
+      # Le workflow exporté, en lecture seule, pour l'importer sans passer par
+      # le navigateur : n8n import:workflow --input=/import/n8n_workflow.json
+      - ./automation:/import:ro
+    depends_on:
+      radar-worker:
+        condition: service_healthy
+
+  radar-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: radar-tech-fr/worker:local
+    container_name: radar-worker
+    restart: unless-stopped
+    # Aucun port publié : l'API n'est joignable que par n8n, sur le réseau
+    # interne de compose, sous le nom d'hôte « radar-worker ».
+    expose:
+      - "8000"
+    volumes:
+      # Le dépôt : code, config, .env, data/raw, entrepôt et rapports.
       - ./:/workspace
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   n8n_data:

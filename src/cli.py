@@ -1,4 +1,4 @@
-"""Command line entry point, the one n8n calls through its Execute Command node.
+"""Command line entry point, the one the worker runs for n8n (src/worker/api.py).
 
     python -m src.cli ingest     collect the offers into data/raw/
     python -m src.cli load       rebuild the warehouse and the skills table
