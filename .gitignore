@@ -18,3 +18,7 @@ data/reports/
 # Les autres bases DuckDB (essais locaux) restent ignorées.
 *.duckdb
 !data/warehouse.duckdb
+
+# Journal d'écriture de DuckDB : replié dans le fichier principal au prochain
+# CHECKPOINT, et dépourvu de sens sans lui.
+*.duckdb.wal
