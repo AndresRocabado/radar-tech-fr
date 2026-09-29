@@ -147,7 +147,7 @@ def report(
 
     day = week.date() if week else last_complete_week(date.today())
     weekly = generate(day, settings, db)
-    markdown_path, json_path = write_report(weekly, out_dir)
+    markdown_path, json_path, html_path = write_report(weekly, out_dir)
 
     _emit({
         "semaine": weekly.week_start,
@@ -157,6 +157,7 @@ def report(
         "objet": email_subject(weekly),
         "markdown": markdown_path,
         "json": json_path,
+        "html": html_path,
     })
 
 

@@ -93,17 +93,22 @@ def test_load_transmet_embeddings(client: TestClient, fake_command) -> None:
     assert fake_command.calls[0][1:] == ["-m", "src.cli", "load", "--embeddings"]
 
 
-def test_report_joint_le_contenu_du_markdown(
+def test_report_joint_les_deux_corps_d_email(
     client: TestClient, fake_command, tmp_path: Path
 ) -> None:
-    rapport = tmp_path / "rapport_2026-W37.md"
-    rapport.write_text("# Radar Tech FR\n", encoding="utf-8")
-    fake_command.stdout = json.dumps({"alertes": 3, "markdown": str(rapport)})
+    markdown = tmp_path / "rapport_2026-W37.md"
+    markdown.write_text("# Radar Tech FR\n", encoding="utf-8")
+    html = tmp_path / "rapport_2026-W37.html"
+    html.write_text("<div>Radar</div>", encoding="utf-8")
+    fake_command.stdout = json.dumps(
+        {"alertes": 3, "markdown": str(markdown), "html": str(html)}
+    )
 
     document = client.post("/report").json()
 
     assert document["alertes"] == 3
     assert document["contenu_markdown"] == "# Radar Tech FR\n"
+    assert document["contenu_html"] == "<div>Radar</div>"
 
 
 # ------------------------------------------------------- échecs

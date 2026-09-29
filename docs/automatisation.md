@@ -22,7 +22,7 @@ flowchart LR
     end
 
     subgraph HEBDO["n8n — chaque lundi à 07:00"]
-        CH(["Cron hebdomadaire"]) --> REP["POST /report"] --> HTML["Markdown vers HTML"] --> MAIL["Envoi par e-mail"]
+        CH(["Cron hebdomadaire"]) --> REP["POST /report"] --> MAIL["Envoi par e-mail"]
     end
 
     subgraph WORKER["radar-worker"]
@@ -45,9 +45,12 @@ flowchart LR
 | Ingest | HTTP Request | `POST /ingest` : un appel par mot-clé de `config/queries.yaml`, pages brutes dans `data/raw/`. Délai d'une heure |
 | Load | HTTP Request | `POST /load` : reconstruit `raw_offres`, la vue `offres` et `offre_competences` |
 | Cron hebdomadaire | Schedule Trigger | `0 7 * * 1` : le lundi, une heure après la collecte du jour |
-| Report | HTTP Request | `POST /report` : rapport de la dernière semaine complète, Markdown renvoyé dans la réponse |
-| Markdown vers HTML | Markdown | corps de l'e-mail, tableaux compris |
-| Envoi par email | Send Email (SMTP) | objet préfixé `[ALERTE xN]` dès qu'une alerte se déclenche |
+| Report | HTTP Request | `POST /report` : rapport de la dernière semaine complète, corps HTML et texte renvoyés dans la réponse |
+| Envoi par email | Send Email (SMTP) | objet préfixé `[ALERTE xN]` dès qu'une alerte se déclenche ; HTML et texte brut |
+
+Le corps de l'e-mail est mis en forme par `src/report/email.py`, pas par n8n :
+styles en ligne, seuls respectés par les clients de messagerie, et tableau
+ramené à quatre colonnes pour rester lisible sur un téléphone.
 
 Si une commande échoue, le worker répond une erreur HTTP, n8n arrête la branche
 sur ce nœud et l'exécution apparaît en erreur dans l'historique : un `load` ne
@@ -65,7 +68,7 @@ n'est réimplémenté dans l'API.
 | `GET /health` | — | `{"statut": "ok"}`, utilisé par le healthcheck |
 | `POST /ingest` | `limit`, `max_results`, `dry_run` | nombre d'offres collectées et détail par mot-clé |
 | `POST /load` | `embeddings` | offres chargées, compétences extraites |
-| `POST /report` | `week`, `threshold`, `min_previous`, `measure` | chiffres du rapport, chemins des fichiers et `contenu_markdown` |
+| `POST /report` | `week`, `threshold`, `min_previous`, `measure` | chiffres du rapport, chemins des fichiers, `contenu_html` et `contenu_markdown` |
 
 Codes d'erreur : **400** si une option est refusée, **504** au-delà d'une heure,
 **500** si la commande échoue — la réponse porte alors les dernières lignes du
@@ -136,7 +139,9 @@ mot de passe d'application Gmail).
    ```
 
 6. Créer un identifiant **SMTP** et le sélectionner dans le nœud
-   « Envoi par email » : le fichier exporté n'en contient aucun.
+   « Envoi par email » : le fichier exporté n'en contient aucun. Un
+   réimport écrase le workflow, donc l'identifiant est à resélectionner
+   ensuite — il n'est pas à ressaisir, il reste enregistré dans n8n.
 7. Tester chaque branche avec *Execute workflow*, puis activer le workflow.
 
 Le volume `n8n_data` conserve workflows, identifiants chiffrés et historique
@@ -157,3 +162,8 @@ d'exécution entre deux `docker compose down` / `up`.
   le réseau interne de compose, et aucun port n'est publié sur l'hôte.
 - **Une seule commande à la fois** : un unique processus uvicorn sert l'API, et
   deux `load` simultanés se disputeraient l'entrepôt.
+- **`emailFormat` doit rester sur `both`** dans le nœud « Envoi par email ».
+  À l'import, n8n retire les paramètres égaux à leur valeur par défaut, et
+  `html` — visible seulement si `emailFormat` vaut `html` ou `both` — serait
+  alors lu comme vide : l'e-mail partirait sans corps. `both` n'étant pas la
+  valeur par défaut, il survit, et le texte brut sert de repli.

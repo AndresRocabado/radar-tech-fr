@@ -1,5 +1,4 @@
 {
-  "id": "radarTechFRpipe1",
   "name": "Radar Tech FR — collecte quotidienne et rapport hebdomadaire",
   "nodes": [
     {
@@ -12,7 +11,10 @@
       "name": "Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [0, -280]
+      "position": [
+        0,
+        -288
+      ]
     },
     {
       "parameters": {
@@ -29,7 +31,10 @@
       "name": "Cron quotidien",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
@@ -43,7 +48,10 @@
       "name": "Ingest",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [240, 0]
+      "position": [
+        240,
+        0
+      ]
     },
     {
       "parameters": {
@@ -57,7 +65,10 @@
       "name": "Load",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [480, 0]
+      "position": [
+        480,
+        0
+      ]
     },
     {
       "parameters": {
@@ -74,7 +85,10 @@
       "name": "Cron hebdomadaire",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 260]
+      "position": [
+        0,
+        272
+      ]
     },
     {
       "parameters": {
@@ -88,32 +102,19 @@
       "name": "Report",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [240, 260]
+      "position": [
+        240,
+        272
+      ]
     },
     {
       "parameters": {
-        "mode": "markdownToHtml",
-        "markdown": "={{ $json.contenu_markdown }}",
-        "destinationKey": "html",
-        "options": {
-          "tables": true
-        }
-      },
-      "id": "9b5f8c4d-2e0a-4f5b-c8d7-4f0a5e7d9c10",
-      "name": "Markdown vers HTML",
-      "type": "n8n-nodes-base.markdown",
-      "typeVersion": 1,
-      "position": [480, 260]
-    },
-    {
-      "parameters": {
-        "resource": "email",
-        "operation": "send",
         "fromEmail": "={{ $env.RAPPORT_EMAIL_DE }}",
         "toEmail": "={{ $env.RAPPORT_EMAIL_A }}",
-        "subject": "={{ $('Report').item.json.objet }}",
-        "emailFormat": "html",
-        "html": "={{ $json.html }}",
+        "subject": "={{ $json.objet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.contenu_markdown }}",
+        "html": "={{ $json.contenu_html }}",
         "options": {
           "appendAttribution": false
         }
@@ -122,31 +123,78 @@
       "name": "Envoi par email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [720, 260]
+      "position": [
+        480,
+        272
+      ],
+      "webhookId": "a2577301-0001-4112-8a2b-8af5462da26b",
+      "credentials": {
+        "smtp": {
+          "id": "gnepYvqoLLzNc7Eh",
+          "name": "SMTP account"
+        }
+      }
     }
   ],
+  "pinData": {},
   "connections": {
     "Cron quotidien": {
-      "main": [[{ "node": "Ingest", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ingest": {
-      "main": [[{ "node": "Load", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Load",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Cron hebdomadaire": {
-      "main": [[{ "node": "Report", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Report": {
-      "main": [[{ "node": "Markdown vers HTML", "type": "main", "index": 0 }]]
-    },
-    "Markdown vers HTML": {
-      "main": [[{ "node": "Envoi par email", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Envoi par email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
+  "active": false,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "timezone": "Europe/Paris"
   },
-  "pinData": {},
-  "active": false,
+  "versionId": "e7815a2b-929f-419e-b4c5-41b689eae542",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "783b5f35ee2af17a85c961b3bb342dc63ff75d17a8875dec32713715a2df166c"
+  },
+  "nodeGroups": [],
+  "id": "radarTechFRpipe1",
   "tags": []
 }

@@ -161,11 +161,14 @@ def load(options: LoadOptions | None = None) -> dict[str, Any]:
 
 @app.post("/report")
 def report(options: ReportOptions | None = None) -> dict[str, Any]:
-    """Écrire le rapport hebdomadaire et retourner son Markdown.
+    """Écrire le rapport hebdomadaire et retourner ses deux corps d'e-mail.
 
-    Le contenu du fichier est renvoyé dans ``contenu_markdown`` : n8n compose
-    l'e-mail à partir de la réponse, sans accès au disque.
+    ``contenu_html`` est le corps mis en forme, ``contenu_markdown`` la version
+    texte brut : n8n compose l'e-mail à partir de la réponse, sans accès au
+    disque et sans conversion de son côté.
     """
     payload = run_command("report", options or ReportOptions())
-    markdown_path = Path(payload["markdown"])
-    return payload | {"contenu_markdown": markdown_path.read_text(encoding="utf-8")}
+    return payload | {
+        "contenu_markdown": Path(payload["markdown"]).read_text(encoding="utf-8"),
+        "contenu_html": Path(payload["html"]).read_text(encoding="utf-8"),
+    }
