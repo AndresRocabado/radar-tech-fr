@@ -30,9 +30,12 @@ TEMPLATE = go.layout.Template(
         plot_bgcolor=SURFACE,
         colorway=[PRIMARY, COMPARISON],
         margin={"l": 8, "r": 24, "t": 16, "b": 8},
-        xaxis={"showgrid": False, "zeroline": False, "linecolor": AXIS,
+        # Les marges ci-dessus sont des minimums : sans automargin, Plotly ne
+        # les élargit pas et les libellés d'axe sortent du cadre.
+        xaxis={"showgrid": False, "zeroline": False, "linecolor": AXIS, "automargin": True,
                "ticks": "outside", "tickcolor": AXIS, "title": {"text": None}},
-        yaxis={"gridcolor": GRID, "zeroline": False, "title": {"text": None}},
+        yaxis={"gridcolor": GRID, "zeroline": False, "automargin": True,
+               "title": {"text": None}},
         hoverlabel={"bgcolor": "#ffffff", "bordercolor": GRID, "font": {"color": INK}},
         legend={"orientation": "h", "x": 0, "y": 1.02, "yanchor": "bottom",
                 "title": {"text": None}},
