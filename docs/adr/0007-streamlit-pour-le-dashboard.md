@@ -1,4 +1,4 @@
-# ADR 0006 — Dashboard : Streamlit plutôt qu'un front-end dédié
+# ADR 0007 — Dashboard : Streamlit plutôt qu'un front-end dédié
 
 - **Statut** : acceptée
 - **Date** : 2026-09-21
@@ -32,6 +32,6 @@ davantage de code de liaison (callbacks) et sans hébergement gratuit équivalen
   recalculerait tout.
 - Les filtres sont dessinés dans `app.py` pour survivre au changement de page.
 - L'hébergement gratuit impose une mémoire limitée, d'où torch en version CPU
-  (`requirements.txt`) et un modèle d'embeddings léger (ADR 0007).
+  (`requirements.txt`) et un modèle d'embeddings léger (ADR 0008).
 - La personnalisation visuelle reste bornée par les composants Streamlit :
   suffisant pour un observatoire, insuffisant pour un produit grand public.

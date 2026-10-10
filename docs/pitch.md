@@ -63,7 +63,7 @@ chaque rechargement alourdit l'historique Git.
 **Quand je changerais d'avis :** si plusieurs utilisateurs devaient écrire
 (annotations, comptes), ou si l'entrepôt devait être partagé entre plusieurs
 applications. PostgreSQL redeviendrait pertinent — ou MotherDuck, pour garder le
-même SQL. C'est écrit dans l'ADR 0005.
+même SQL. C'est écrit dans l'ADR 0006.
 
 ### Q2. Quelles sont les limites de votre RAG ?
 

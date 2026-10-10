@@ -3,6 +3,32 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
 et le projet la [gestion sémantique de version](https://semver.org/lang/fr/).
 
+## [1.1.0] — 2026-10-10
+
+L'entrepôt passe à 3 729 offres, collectées par l'automatisation n8n.
+
+### Ajouté
+
+- Conteneur `radar-worker` (`Dockerfile.worker`, `src/worker/api.py`) : une API
+  FastAPI expose `ingest`, `load` et `report` à n8n sur le réseau interne de
+  docker-compose. L'image n8n reste l'image officielle, sans modification
+  ([ADR 0005](docs/adr/0005-conteneur-radar-worker.md), qui remplace l'ADR 0004).
+- Le rapport hebdomadaire est rendu en HTML mis en forme côté Python
+  (`src/report/render.py`) ; `/report` renvoie les corps HTML et Markdown de
+  l'e-mail.
+- Capture du workflow n8n dans `docs/img/`.
+
+### Corrigé
+
+- Devcontainer et CI alignés sur Python 3.12, le plancher imposé par numpy et
+  scipy.
+
+### Modifié
+
+- Les ADR DuckDB, Streamlit et embeddings, qui partageaient le numéro 0005 avec
+  l'ADR du conteneur, sont renumérotés 0006, 0007 et 0008.
+- README : chiffres, limites et pistes mis à jour.
+
 ## [1.0.0] — 2026-09-23
 
 Première version publique : l'observatoire est déployé, alimenté par 2 789 offres
@@ -47,4 +73,5 @@ réelles et couvert par 183 tests.
 - README : version de Python requise, avertissement sur `load`, et précision
   que `pytest` demande `requirements-dev.txt`.
 
+[1.1.0]: https://github.com/AndresRocabado/radar-tech-fr/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/AndresRocabado/radar-tech-fr/releases/tag/v1.0.0

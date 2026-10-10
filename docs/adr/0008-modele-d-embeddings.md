@@ -1,4 +1,4 @@
-# ADR 0007 — Embeddings : paraphrase-multilingual-MiniLM-L12-v2
+# ADR 0008 — Embeddings : paraphrase-multilingual-MiniLM-L12-v2
 
 - **Statut** : acceptée
 - **Date** : 2026-09-21

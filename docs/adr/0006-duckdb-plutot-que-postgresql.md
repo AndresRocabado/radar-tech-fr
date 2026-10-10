@@ -1,4 +1,4 @@
-# ADR 0005 — Entrepôt : DuckDB plutôt que PostgreSQL
+# ADR 0006 — Entrepôt : DuckDB plutôt que PostgreSQL
 
 - **Statut** : acceptée
 - **Date** : 2026-09-21
