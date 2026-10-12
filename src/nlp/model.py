@@ -6,7 +6,7 @@ encodeur factice — est typé sans avoir à importer torch.
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import numpy as np
 
@@ -41,4 +41,6 @@ def load_model(name: str = MODEL_NAME) -> Encoder:
     enable_system_trust_store()
     from sentence_transformers import SentenceTransformer  # import lourd : différé
 
-    return SentenceTransformer(name, device="cpu")
+    # Les signatures de la bibliothèque, surchargées et plus larges que l'usage
+    # du projet, ne se réduisent pas d'elles-mêmes au Protocol.
+    return cast(Encoder, SentenceTransformer(name, device="cpu"))

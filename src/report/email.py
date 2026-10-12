@@ -34,7 +34,7 @@ _TH_NUM = _TH + "text-align:right;"
 _TD = f"padding:8px 10px;border-bottom:1px solid {RULE};"
 _TD_NUM = _TD + "text-align:right;white-space:nowrap;"
 _TD_GROWTH = _TD_NUM + f"font-weight:700;color:{ACCENT};"
-_STAT = f"font-size:15px;margin:0 0 6px;line-height:1.5;"
+_STAT = "font-size:15px;margin:0 0 6px;line-height:1.5;"
 
 
 def _alert_row(trend: SkillTrend) -> str:

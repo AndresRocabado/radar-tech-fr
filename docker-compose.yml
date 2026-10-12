@@ -9,8 +9,9 @@
 
 services:
   n8n:
-    # À épingler sur la version testée après la première mise en service.
-    image: n8nio/n8n:latest
+    # Épinglée sur la version testée avec automation/n8n_workflow.json : une
+    # mise à jour se fait à la main, en relançant le workflow de bout en bout.
+    image: n8nio/n8n:2.40.7
     container_name: radar-n8n
     restart: unless-stopped
     # Exposé sur la boucle locale uniquement : l'interface n'est pas protégée

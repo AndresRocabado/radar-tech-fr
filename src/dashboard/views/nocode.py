@@ -9,7 +9,13 @@ from src.dashboard import charts, data
 from src.dashboard.filtering import Filters
 from src.dashboard.queries import MIN_SALARY_SAMPLE, salary_gap
 from src.dashboard.ui import (
-    NO_OFFER, explain_if_empty, family_label, family_order, fmt_eur, fmt_pct, show_chart,
+    NO_OFFER,
+    explain_if_empty,
+    family_label,
+    family_order,
+    fmt_eur,
+    fmt_pct,
+    show_chart,
 )
 
 

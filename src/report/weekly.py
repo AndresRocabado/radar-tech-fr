@@ -14,10 +14,12 @@ import logging
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, get_args
 
 import duckdb
 import yaml
+
+from src.warehouse.query import fetch_one
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +27,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DB_PATH = PROJECT_ROOT / "data" / "warehouse.duckdb"
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "queries.yaml"
 
-MEASURES = ("part", "volume")
+#: Growth measured on the share of offers or on their raw count.
+Measure = Literal["part", "volume"]
+MEASURES: tuple[str, ...] = get_args(Measure)
 
 #: YAML key -> ``ReportSettings`` field.
 _CONFIG_KEYS = {
@@ -63,7 +67,7 @@ GROUP BY c.competence, c.famille
 class ReportSettings:
     """Thresholds of the weekly report, read from the ``rapport`` YAML section."""
 
-    measure: str = "part"
+    measure: Measure = "part"
     growth_threshold_pct: float = 20.0
     min_previous_offers: int = 5
     min_emerging_offers: int = 3
@@ -143,7 +147,7 @@ def build_weekly_report(
         "current": week,
         "next": week + timedelta(weeks=1),
     }
-    offers, previous_offers, alternance = con.execute(_WEEK_TOTALS, params).fetchone()
+    offers, previous_offers, alternance = fetch_one(con, _WEEK_TOTALS, params)
 
     trends = []
     for competence, famille, before, now in con.execute(_SKILL_COUNTS, params).fetchall():

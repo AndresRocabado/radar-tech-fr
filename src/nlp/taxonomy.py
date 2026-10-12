@@ -104,7 +104,7 @@ class Taxonomy:
         self.skills = skills
 
     @classmethod
-    def load(cls, path: Path = DEFAULT_TAXONOMY_PATH) -> "Taxonomy":
+    def load(cls, path: Path = DEFAULT_TAXONOMY_PATH) -> Taxonomy:
         """Lire et compiler le YAML.
 
         Raises:

@@ -128,11 +128,20 @@ def test_une_commande_en_echec_donne_un_500_avec_le_journal(
     assert detail["journal"] == ["ERROR data/raw/ est vide"]
 
 
-def test_une_option_refusee_donne_un_400(client: TestClient, fake_command) -> None:
+def test_une_option_refusee_par_la_commande_donne_un_400(
+    client: TestClient, fake_command
+) -> None:
     """Typer sort avec 2 : la requête est fautive, pas le pipeline."""
     fake_command.code = 2
 
-    assert client.post("/report", json={"measure": "moyenne"}).status_code == 400
+    assert client.post("/report", json={"measure": "volume"}).status_code == 400
+
+
+def test_une_mesure_inconnue_est_refusee_sans_lancer_la_commande(
+    client: TestClient, fake_command
+) -> None:
+    assert client.post("/report", json={"measure": "moyenne"}).status_code == 422
+    assert fake_command.calls == []
 
 
 def test_une_sortie_illisible_donne_un_500(client: TestClient, fake_command) -> None:

@@ -24,7 +24,11 @@ import numpy as np
 
 from src.nlp.model import Encoder, Tokenizer, load_model
 from src.nlp.search import (
-    DEFAULT_IDS_PATH, DEFAULT_VECTORS_PATH, VectorIndex, normalize, save_index,
+    DEFAULT_IDS_PATH,
+    DEFAULT_VECTORS_PATH,
+    VectorIndex,
+    normalize,
+    save_index,
 )
 
 logger = logging.getLogger(__name__)

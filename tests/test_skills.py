@@ -17,7 +17,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nlp import skills, taxonomy as taxonomy_module  # noqa: E402
+from src.nlp import skills  # noqa: E402
 from src.nlp.nocode import GENERIC_MARKER, GENERIC_TERM, NOCODE_FAMILY  # noqa: E402
 from src.nlp.report import nocode_share, top_skills  # noqa: E402
 from src.nlp.taxonomy import Taxonomy  # noqa: E402

@@ -6,7 +6,7 @@ Every HTTP call is faked; no test touches the network or sleeps for real.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
@@ -105,7 +105,7 @@ def test_split_window_refuses_a_window_that_is_already_narrow() -> None:
 
 
 def test_default_window_spans_the_lookback() -> None:
-    now = datetime(2026, 3, 1, tzinfo=timezone.utc)
+    now = datetime(2026, 3, 1, tzinfo=UTC)
     assert pagination.default_window(30, now=now) == (
         "2026-01-30T00:00:00Z",
         "2026-03-01T00:00:00Z",

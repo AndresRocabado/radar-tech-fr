@@ -133,9 +133,8 @@ def request_with_retry(
         if attempt == max_attempts - 1:
             break
 
-        delay = parse_retry_after(response.headers.get("Retry-After"))
-        if delay is None:
-            delay = backoff_delay(attempt)
+        retry_after = parse_retry_after(response.headers.get("Retry-After"))
+        delay = backoff_delay(attempt) if retry_after is None else retry_after
         logger.warning(
             "Got %d from %s (attempt %d/%d), retrying in %.2fs",
             response.status_code, url, attempt + 1, max_attempts, delay,

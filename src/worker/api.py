@@ -22,6 +22,8 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from src.report.weekly import Measure
+
 logger = logging.getLogger("radar.worker")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -61,7 +63,8 @@ class ReportOptions(BaseModel):
     week: date | None = None
     threshold: float | None = None
     min_previous: int | None = None
-    measure: str | None = None
+    #: Checked here so that a wrong value is a 422 before any subprocess starts.
+    measure: Measure | None = None
 
 
 def build_flags(options: BaseModel) -> list[str]:

@@ -21,7 +21,7 @@ NO_ANSWER = "Je n'ai pas cette information dans les données."
 _NARROW_SPACE = " "
 _UNKNOWN = "non renseigné"
 
-SYSTEM_PROMPT = """\
+SYSTEM_PROMPT = f"""\
 Tu es l'assistant de « Radar Tech FR », un observatoire du marché de l'emploi \
 tech en France construit sur les offres publiées par l'API France Travail.
 
@@ -34,7 +34,7 @@ bloc STATISTIQUES.
 3. Ne cite que des chiffres présents dans le bloc STATISTIQUES. N'additionne, \
 ne calcule, n'extrapole et n'arrondis rien toi-même. Les offres du bloc OFFRES \
 servent à illustrer et à citer des exemples, jamais à être comptées.
-4. Si le contexte ne permet pas de répondre, écris exactement « {no_answer} », \
+4. Si le contexte ne permet pas de répondre, écris exactement « {NO_ANSWER} », \
 puis indique en une phrase ce qui manque. Vaut aussi pour une question à \
 laquelle le contexte ne répond qu'à moitié : réponds sur la partie couverte, \
 et emploie cette phrase pour le reste.
@@ -42,7 +42,7 @@ et emploie cette phrase pour le reste.
 marché, ni classement d'outils, ni entreprise absente des offres.
 6. Rappelle que ces chiffres décrivent les offres collectées, pas le marché \
 de l'emploi tout entier, dès que la question porte sur une tendance.
-""".format(no_answer=NO_ANSWER)
+"""
 
 
 def _int(value: int) -> str:

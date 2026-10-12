@@ -12,7 +12,7 @@ import json
 import logging
 import re
 import unicodedata
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -34,8 +34,8 @@ def slugify(text: str) -> str:
 
 def utc_timestamp(moment: datetime | None = None) -> str:
     """Return a compact UTC timestamp suitable for a filename."""
-    moment = moment or datetime.now(timezone.utc)
-    return moment.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    moment = moment or datetime.now(UTC)
+    return moment.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
 def raw_page_filename(
@@ -86,7 +86,7 @@ class RunManifest:
     def __init__(self, run_id: str | None = None, raw_dir: Path = DEFAULT_RAW_DIR) -> None:
         self.run_id = run_id or utc_timestamp()
         self.raw_dir = raw_dir
-        self.started_at = datetime.now(timezone.utc).isoformat()
+        self.started_at = datetime.now(UTC).isoformat()
         self.entries: list[dict[str, Any]] = []
 
     def record(
@@ -101,7 +101,7 @@ class RunManifest:
         """Append one request outcome to the manifest."""
         self.entries.append(
             {
-                "fetched_at": datetime.now(timezone.utc).isoformat(),
+                "fetched_at": datetime.now(UTC).isoformat(),
                 "params": params,
                 "status_code": status_code,
                 "content_range": content_range,
@@ -118,7 +118,7 @@ class RunManifest:
         document = {
             "run_id": self.run_id,
             "started_at": self.started_at,
-            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "finished_at": datetime.now(UTC).isoformat(),
             "requests": self.entries,
         }
         path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")

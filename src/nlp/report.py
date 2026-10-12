@@ -12,6 +12,7 @@ from pathlib import Path
 import duckdb
 
 from src.nlp.nocode import GENERIC_TERM, NOCODE_FAMILY
+from src.warehouse.query import fetch_one
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DB_PATH = PROJECT_ROOT / "data" / "warehouse.duckdb"
@@ -52,7 +53,7 @@ def nocode_share(con: duckdb.DuckDBPyConnection) -> tuple[int, int, int]:
     Airtable…) ; le troisième y ajoute les offres qui ne disent que « no-code »
     ou « low-code » sans nommer d'outil.
     """
-    row = con.execute(_NOCODE_SHARE, [GENERIC_TERM, NOCODE_FAMILY]).fetchone()
+    row = fetch_one(con, _NOCODE_SHARE, [GENERIC_TERM, NOCODE_FAMILY])
     return int(row[0]), int(row[1]), int(row[2])
 
 

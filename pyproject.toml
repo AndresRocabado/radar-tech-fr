@@ -18,3 +18,26 @@ testpaths = ["tests"]
 # La racine du dépôt sur le sys.path : `pytest` marche alors depuis n'importe
 # quel dossier, sans que chaque fichier de test ait à la bricoler lui-même.
 pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["data", "docs"]
+
+[tool.ruff.lint]
+# Erreurs, imports triés, syntaxe moderne et pièges courants. La liste est
+# explicite pour qu'une mise à jour de ruff n'ajoute pas de règles en silence.
+select = ["E", "F", "W", "I", "UP", "B", "RUF100"]
+# Comme dans la configuration par défaut de ruff : des chaînes CSS ou des
+# paramètres de test lisibles sur une ligne valent mieux qu'une coupe forcée.
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src", "app.py"]
+# Le CLAUDE.md exige des annotations : mypy les rend obligatoires.
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+# Streamlit, DuckDB, sentence-transformers… ne publient pas tous leurs types.
+ignore_missing_imports = true

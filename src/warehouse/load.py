@@ -17,6 +17,8 @@ from pathlib import Path
 import duckdb
 import yaml
 
+from src.warehouse.query import fetch_one
+
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -105,7 +107,7 @@ def load_raw_offres(
 
     con.execute(_CREATE_RAW_TABLE)
     con.execute(_INSERT_RAW_OFFERS, [str(raw_dir / RAW_GLOB)])
-    loaded = con.execute("SELECT count(*) FROM raw_offres").fetchone()[0]
+    loaded = fetch_one(con, "SELECT count(*) FROM raw_offres")[0]
     logger.info("Loaded %d distinct offers from %d raw pages", loaded, len(files))
     return loaded
 

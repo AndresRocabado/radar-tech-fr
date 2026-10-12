@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -36,16 +38,17 @@ def family_order(codes: list[str]) -> list[str]:
     return sorted(codes, key=lambda code: (rank.get(code, len(rank)), code))
 
 
-def _missing(value: object) -> bool:
+# Les formateurs reçoivent des cellules pandas, typées ``Any`` par la bibliothèque.
+def _missing(value: Any) -> bool:
     return value is None or bool(pd.isna(value))
 
 
-def fmt_int(value: object) -> str:
+def fmt_int(value: Any) -> str:
     """``1234`` -> ``1 234``."""
     return "—" if _missing(value) else f"{int(value):,}".replace(",", _NARROW_SPACE)
 
 
-def fmt_pct(value: object, signed: bool = False) -> str:
+def fmt_pct(value: Any, signed: bool = False) -> str:
     """``0.123`` -> ``12 %`` (ou ``+12 %`` si ``signed``)."""
     if _missing(value):
         return "—"
@@ -53,7 +56,7 @@ def fmt_pct(value: object, signed: bool = False) -> str:
     return f"{sign}{100 * float(value):.0f}{_NARROW_SPACE}%"
 
 
-def fmt_eur(value: object) -> str:
+def fmt_eur(value: Any) -> str:
     """``35000.0`` -> ``35 000 €``."""
     if _missing(value):
         return "—"

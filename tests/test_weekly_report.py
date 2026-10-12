@@ -13,6 +13,8 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from weekly_data import PREVIOUS, WEEK, make_warehouse  # noqa: E402
+
 from src.report.render import email_subject, iso_week_label, report_to_dict, to_markdown  # noqa: E402
 from src.report.weekly import (  # noqa: E402
     ReportSettings,
@@ -20,7 +22,6 @@ from src.report.weekly import (  # noqa: E402
     last_complete_week,
     week_start,
 )
-from weekly_data import PREVIOUS, WEEK, make_warehouse  # noqa: E402
 
 
 @pytest.fixture

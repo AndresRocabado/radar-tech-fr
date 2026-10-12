@@ -26,7 +26,7 @@ def _use_example(question: str) -> None:
 
 def _examples() -> None:
     """Trois questions prêtes à poser, une par bouton."""
-    for column, example in zip(st.columns(len(EXAMPLES)), EXAMPLES):
+    for column, example in zip(st.columns(len(EXAMPLES)), EXAMPLES, strict=True):
         column.button(example, on_click=_use_example, args=(example,), width="stretch")
 
 

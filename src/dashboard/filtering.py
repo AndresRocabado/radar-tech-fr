@@ -15,6 +15,8 @@ from typing import Any
 
 import duckdb
 
+from src.warehouse.query import fetch_one
+
 #: Libellés des offres sans région ni type de contrat : elles restent ainsi
 #: sélectionnables au lieu de disparaître dès qu'un filtre est posé.
 UNKNOWN_REGION = "Non renseignée"
@@ -59,9 +61,9 @@ def filter_options(con: duckdb.DuckDBPyConnection) -> dict[str, Any]:
     def values(sql: str) -> list[str]:
         return [row[0] for row in con.execute(sql).fetchall()]
 
-    start, end = con.execute(
-        "SELECT min(date_creation)::DATE, max(date_creation)::DATE FROM offres"
-    ).fetchone()
+    start, end = fetch_one(
+        con, "SELECT min(date_creation)::DATE, max(date_creation)::DATE FROM offres"
+    )
     return {
         "regions": values(
             f"SELECT DISTINCT coalesce(region, '{UNKNOWN_REGION}') FROM offres ORDER BY 1"

@@ -17,11 +17,12 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from weekly_data import PREVIOUS, WEEK, make_warehouse  # noqa: E402
+
 from src.report.email import to_html  # noqa: E402
 from src.report.format import decimal, family_label, signed, variation_pct  # noqa: E402
 from src.report.render import write_report  # noqa: E402
 from src.report.weekly import ReportSettings, build_weekly_report  # noqa: E402
-from weekly_data import PREVIOUS, WEEK, make_warehouse  # noqa: E402
 
 
 @pytest.fixture

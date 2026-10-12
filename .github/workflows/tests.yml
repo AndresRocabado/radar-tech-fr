@@ -34,6 +34,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      - name: Vérifier le style et les types
+        # Une seule version suffit : le code est le même sur toute la matrice.
+        if: matrix.python-version == '3.12'
+        run: |
+          ruff check .
+          mypy
+
       - name: Lancer les tests
         # data/raw/ n'est pas versionné : les tests de qualité des données qui
         # en dépendent se signalent en « skipped », les autres doivent passer.

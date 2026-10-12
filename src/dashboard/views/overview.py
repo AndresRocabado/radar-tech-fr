@@ -9,7 +9,13 @@ from src.dashboard import charts, data
 from src.dashboard.filtering import Filters
 from src.dashboard.queries import TOP_SKILLS_LIMIT
 from src.dashboard.ui import (
-    NO_OFFER, explain_if_empty, family_label, fmt_eur, fmt_int, fmt_pct, show_chart,
+    NO_OFFER,
+    explain_if_empty,
+    family_label,
+    fmt_eur,
+    fmt_int,
+    fmt_pct,
+    show_chart,
 )
 
 

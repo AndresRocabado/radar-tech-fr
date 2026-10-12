@@ -40,7 +40,7 @@ def load_config(path: Path = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
     return config
 
 
-def build_searches(config: dict[str, Any], limit: int | None = None) -> list[dict[str, str]]:
+def build_searches(config: dict[str, Any], limit: int | None = None) -> list[dict[str, Any]]:
     """Return one search per keyword, with no contract filter, capped at ``limit``."""
     searches = [{"motsCles": keyword} for keyword in config["keywords"]]
     return searches[:limit] if limit else searches

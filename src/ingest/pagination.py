@@ -18,7 +18,7 @@ does. (Older wrappers document a ceiling of 1150; that limit is obsolete —
 from __future__ import annotations
 
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 #: Largest number of offers the API will put in a single page.
 MAX_PAGE_SIZE = 150
@@ -61,17 +61,17 @@ def parse_content_range(value: str | None) -> tuple[int | None, int | None, int 
 
 def format_api_datetime(moment: datetime) -> str:
     """Render a datetime the way the API expects it (UTC, ``...T...Z``)."""
-    return moment.astimezone(timezone.utc).strftime(API_DATETIME_FORMAT)
+    return moment.astimezone(UTC).strftime(API_DATETIME_FORMAT)
 
 
 def parse_api_datetime(value: str) -> datetime:
     """Parse an API-formatted datetime string back into an aware datetime."""
-    return datetime.strptime(value, API_DATETIME_FORMAT).replace(tzinfo=timezone.utc)
+    return datetime.strptime(value, API_DATETIME_FORMAT).replace(tzinfo=UTC)
 
 
 def default_window(lookback_days: int, now: datetime | None = None) -> tuple[str, str]:
     """Return the ``(minCreationDate, maxCreationDate)`` pair covering the lookback."""
-    end = now or datetime.now(timezone.utc)
+    end = now or datetime.now(UTC)
     start = end - timedelta(days=lookback_days)
     return (format_api_datetime(start), format_api_datetime(end))
 

@@ -22,6 +22,7 @@ from src.dashboard import data, semantic
 from src.dashboard.filtering import FILTERED_CTE, UNKNOWN_CONTRACT, UNKNOWN_REGION, Filters
 from src.nlp import embeddings, llm, rag
 from src.nlp.search import top_k
+from src.warehouse.query import fetch_one
 
 #: Nombre d'offres retenues par la recherche vectorielle et montrées au modèle.
 TOP_K = 20
@@ -114,7 +115,7 @@ def _pairs(
 
 def _stats(con: duckdb.DuckDBPyConnection, params: dict[str, object]) -> rag.Stats:
     """Compter le sous-ensemble : volumes, salaire médian, période, répartitions."""
-    row = con.execute(FILTERED_CTE + _SUBSET_CTE + _STATS_SQL, params).fetchone()
+    row = fetch_one(con, FILTERED_CTE + _SUBSET_CTE + _STATS_SQL, params)
     offers, filtered, apprenticeships, with_salary, median, first_day, last_day = row
     return rag.Stats(
         offers=int(offers),
