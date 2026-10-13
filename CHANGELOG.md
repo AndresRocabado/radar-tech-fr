@@ -3,6 +3,31 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
 et le projet la [gestion sémantique de version](https://semver.org/lang/fr/).
 
+## [Non publié]
+
+### Ajouté
+
+- `python -m src.cli prune` : liste les pages de `data/raw/` redondantes, en
+  simulation seulement. Une page n'est redondante que si chacune de ses offres
+  figure, dans une version au moins aussi récente, dans une page conservée ; une
+  vérification indépendante refuse tout plan qui ferait perdre une offre.
+
+### Corrigé
+
+- `load` reconstruit l'entrepôt dans un fichier temporaire, substitué d'un bloc
+  une fois offres et compétences écrites (`src/warehouse/staging.py`). Le
+  fichier ne garde plus de blocs morts (39 Mo → 21 Mo pour 3 729 offres), le
+  dashboard ne voit jamais un entrepôt à moitié reconstruit, et un échec laisse
+  l'entrepôt en place intact.
+- Assistant : le cache de la réponse tient compte du fournisseur, du modèle et
+  de la version de l'entrepôt.
+
+### Modifié
+
+- Page « Recherche » : résultats mis en cache, filtrage de l'index par
+  dictionnaire id → ligne.
+- Modèle par défaut `claude-opus-5-5`, avec un effort explicite.
+
 ## [1.1.0] — 2026-10-10
 
 L'entrepôt passe à 3 729 offres, collectées par l'automatisation n8n.
