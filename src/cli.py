@@ -3,6 +3,7 @@
     python -m src.cli ingest     collect the offers into data/raw/
     python -m src.cli load       rebuild the warehouse and the skills table
     python -m src.cli report     write the weekly Markdown / JSON summary
+    python -m src.cli prune      list the redundant raw pages (dry run, deletes nothing)
 
 Contract with n8n: standard output carries exactly one JSON line per command,
 which the workflow parses; logs go to standard error. A failure exits non-zero,
@@ -29,7 +30,9 @@ from src.report.weekly import (
     generate,
     last_complete_week,
 )
+from src.warehouse.load import DEFAULT_RAW_DIR as RAW_DIR
 from src.warehouse.load import EmptyRawDirectoryError, build_warehouse
+from src.warehouse.staging import staged_rebuild
 
 logger = logging.getLogger("radar")
 
@@ -105,15 +108,17 @@ def load(
 ) -> None:
     """Reconstruire l'entrepôt DuckDB et la table des compétences depuis data/raw/."""
     try:
-        offers = build_warehouse()
+        # Both steps write to one staging file, swapped in only once complete:
+        # the dashboard never sees offers without their skills, and a failure
+        # leaves the current warehouse as it was.
+        with staged_rebuild(DEFAULT_DB_PATH) as staging:
+            offers = build_warehouse(db_path=staging)
+            skills = build_skills(db_path=staging)
     except EmptyRawDirectoryError as error:
         # Sortie non nulle : le nœud n8n s'arrête là plutôt que d'enchaîner sur
         # un entrepôt vide.
         logger.error("%s", error)
         raise typer.Exit(code=1) from error
-    # raw_offres has just been rebuilt: offre_competences must follow, or it
-    # would describe the previous load.
-    skills = build_skills()
     payload: dict[str, Any] = {"offres": offers, "competences": skills}
 
     if embeddings:
@@ -122,6 +127,28 @@ def load(
         build_embeddings()
         payload["embeddings"] = True
     _emit(payload)
+
+
+@app.command()
+def prune(
+    raw_dir: Annotated[Path, typer.Option(help="dossier des pages brutes")] = RAW_DIR,
+) -> None:
+    """Lister les pages brutes redondantes, sans rien supprimer (simulation)."""
+    from src.ingest.prune import plan_prune, verify  # pulls in requests via src.ingest
+
+    plan = plan_prune(raw_dir)
+    lost = verify(plan)
+    _emit({
+        "simulation": True,
+        "pages": len(plan.keep) + len(plan.redundant),
+        "pages_conservees": len(plan.keep),
+        "pages_redondantes": len(plan.redundant),
+        "mo_liberables": round(plan.redundant_bytes / 1_000_000, 1),
+        "offres_perdues": lost,
+    })
+    if lost:
+        logger.error("%d offres perdraient leur dernière version : plan refusé", len(lost))
+        raise typer.Exit(code=1)
 
 
 @app.command()
