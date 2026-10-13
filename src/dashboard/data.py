@@ -25,9 +25,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DB_PATH_ENV = "RADAR_DB_PATH"
 REQUIRED_TABLES = ("offres", "offre_competences")
 
-_BUILD_HINT = (
-    "Construisez-le avec `python -m src.warehouse.load` puis `python -m src.nlp.skills`."
-)
+_BUILD_HINT = "Construisez-le avec `python -m src.cli load`."
 
 
 def db_path() -> Path:
