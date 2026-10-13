@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from collections.abc import Collection
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 
 import numpy as np
@@ -33,6 +34,11 @@ class VectorIndex:
             raise ValueError(
                 f"Index désaligné : {len(self.ids)} ids pour une matrice {self.vectors.shape}"
             )
+
+    @cached_property
+    def positions(self) -> dict[str, int]:
+        """Ligne de chaque id dans la matrice, calculée une fois par index."""
+        return {offer_id: row for row, offer_id in enumerate(self.ids)}
 
 
 def normalize(vectors: np.ndarray) -> np.ndarray:
@@ -82,10 +88,12 @@ def top_k(
     if allowed is None:
         candidates = np.arange(len(index.ids))
     else:
-        keep = set(allowed)
-        candidates = np.array(
-            [i for i, offer_id in enumerate(index.ids) if offer_id in keep], dtype=int
-        )
+        positions = index.positions
+        # Triés : à score égal, l'ordre de l'index départage, comme sans filtre.
+        candidates = np.sort(np.fromiter(
+            (positions[offer_id] for offer_id in set(allowed) if offer_id in positions),
+            dtype=int,
+        ))
     if k <= 0 or candidates.size == 0:
         return []
     best = candidates[np.argsort(-scores[candidates], kind="stable")[:k]]

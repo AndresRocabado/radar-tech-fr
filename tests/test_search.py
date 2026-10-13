@@ -119,6 +119,20 @@ def test_la_recherche_respecte_les_offres_autorisees(index: VectorIndex) -> None
     assert top_k(index, np.array([1.0, 0.0]), allowed=[]) == []
 
 
+def test_une_offre_autorisee_absente_de_l_index_est_ignoree(index: VectorIndex) -> None:
+    """Entrepôt plus récent que l'index : ses nouvelles offres n'ont pas de vecteur."""
+    hits = top_k(index, np.array([1.0, 0.0]), allowed=["inconnue", "c"])
+    assert [i for i, _ in hits] == ["c"]
+
+
+def test_a_score_egal_l_ordre_de_l_index_departage() -> None:
+    """Le filtre ne doit pas changer l'ordre des ex aequo, quel que soit son ordre."""
+    query = np.array([1.0, 1.0])
+    egalite = VectorIndex(("x", "y"), normalize(np.array([[1, 0], [0, 1]])))
+    assert [i for i, _ in top_k(egalite, query, allowed=["y", "x"])] == ["x", "y"]
+    assert [i for i, _ in top_k(egalite, query)] == ["x", "y"]
+
+
 def test_k_plus_grand_que_l_index(index: VectorIndex) -> None:
     assert len(top_k(index, np.array([1.0, 0.0]), k=10)) == 3
 

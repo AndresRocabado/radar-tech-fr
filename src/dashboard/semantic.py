@@ -54,9 +54,13 @@ def _index(vectors_version: float, ids_version: float) -> VectorIndex:
     return load_index()
 
 
+def _index_versions() -> tuple[float, float]:
+    return DEFAULT_VECTORS_PATH.stat().st_mtime, DEFAULT_IDS_PATH.stat().st_mtime
+
+
 def index() -> VectorIndex:
     """L'index vectoriel, relu seulement quand ses fichiers changent."""
-    return _index(DEFAULT_VECTORS_PATH.stat().st_mtime, DEFAULT_IDS_PATH.stat().st_mtime)
+    return _index(*_index_versions())
 
 
 @st.cache_data(show_spinner=False)
@@ -74,11 +78,18 @@ def filtered_ids(filters: Filters) -> list[str]:
 
 def unindexed_count(filters: Filters) -> int:
     """Nombre d'offres filtrées absentes de l'index (entrepôt plus récent que lui)."""
-    return len(set(filtered_ids(filters)) - set(index().ids))
+    positions = index().positions
+    return sum(offer_id not in positions for offer_id in filtered_ids(filters))
 
 
-def search(text: str, filters: Filters, k: int = 10) -> pd.DataFrame:
-    """Les ``k`` offres filtrées les plus proches de ``text``, score décroissant."""
+# Streamlit rejoue la page à chaque interaction (tri du tableau, filtre) : sans
+# cache, la phrase serait réencodée par le modèle à chaque fois. Les dates de
+# modification de l'entrepôt et de l'index font partie de la clé.
+@st.cache_data(show_spinner=False)
+def _search(
+    text: str, filters: Filters, k: int,
+    db_version: float, vectors_version: float, ids_version: float,
+) -> pd.DataFrame:
     query = embeddings.embed_texts([text], model())[0]
     hits = top_k(index(), query, k, allowed=filtered_ids(filters))
     if not hits:
@@ -88,3 +99,8 @@ def search(text: str, filters: Filters, k: int = 10) -> pd.DataFrame:
         details = con.execute(_DETAILS_SQL, {"ids": scores["id"].tolist()}).df()
     # Une jointure interne garde l'ordre de la table de gauche : celui des scores.
     return scores.merge(details, on="id", how="inner")[RESULT_COLUMNS]
+
+
+def search(text: str, filters: Filters, k: int = 10) -> pd.DataFrame:
+    """Les ``k`` offres filtrées les plus proches de ``text``, score décroissant."""
+    return _search(text, filters, k, data.db_path().stat().st_mtime, *_index_versions())
