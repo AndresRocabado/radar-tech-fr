@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from dotenv import load_dotenv
 
@@ -30,7 +30,11 @@ logger = logging.getLogger(__name__)
 MOCK = "mock"
 ANTHROPIC = "anthropic"
 
-DEFAULT_MODEL = "claude-opus-5"
+DEFAULT_MODEL = "claude-opus-5-5"
+#: Profondeur du raisonnement. Explicite, car le défaut change d'un modèle à
+#: l'autre ; une synthèse de quelques phrases sur des chiffres déjà comptés
+#: n'a pas besoin de plus.
+EFFORT: Final = "medium"
 #: Plafond de génération. La réponse tient en quelques phrases, mais le budget
 #: couvre aussi le raisonnement adaptatif du modèle, qui se compte dedans.
 MAX_TOKENS = 16_000
@@ -129,6 +133,7 @@ def _anthropic_answer(context: rag.Context, config: Config) -> str:
             max_tokens=MAX_TOKENS,
             system=rag.SYSTEM_PROMPT,
             thinking={"type": "adaptive"},
+            output_config={"effort": EFFORT},
             messages=[{"role": "user", "content": rag.user_prompt(context)}],
         ) as stream:
             message = stream.get_final_message()
