@@ -2,8 +2,9 @@
 
 - **Statut** : acceptée
 - **Date** : 2026-09-14
-- **Note** : les tailles du corps datent de la décision (55 offres). Voir la
-  [mise à jour du 24/09/2026](#mise-à-jour--2026-09-24) en fin de document.
+- **Note** : les tailles du corps datent de la décision (55 offres). Voir les
+  mises à jour du [24/09/2026](#mise-à-jour--2026-09-24) et du
+  [13/10/2026](#mise-à-jour--2026-10-13) en fin de document.
 
 ## Contexte
 
@@ -102,3 +103,29 @@ fichier pesait l'essentiel. Le seuil de 100 Mo est donc attendu vers
 
 Le dépôt lui-même pèse 18 Mo de `.git`, pour 3 versions de l'entrepôt dans
 l'historique. C'est le coût annoncé du binaire versionné, et il reste modeste.
+
+## Mise à jour — 2026-10-13
+
+**Les mesures précédentes comptaient des blocs morts.** DuckDB ne réduit jamais
+un fichier : chaque `CREATE OR REPLACE TABLE` de `load` libérait les blocs de
+l'ancienne table sans les rendre. Avant correction, l'entrepôt de 3 729 offres
+pesait 39,0 Mo, dont 46 % de blocs libres (72 sur 156). `load` reconstruit
+désormais l'entrepôt dans un fichier temporaire, substitué d'un bloc une fois
+complet (`src/warehouse/staging.py`).
+
+| Fichier                    | 24/09/2026 | Aujourd'hui | Rôle                           |
+|----------------------------|-----------:|------------:|--------------------------------|
+| `data/warehouse.duckdb`    |    30,3 Mo | **20,8 Mo** | 3 729 offres, 12 004 liens     |
+| `data/embeddings.npy`      |     4,1 Mo |  **5,5 Mo** | 3 729 vecteurs de 384 dim.     |
+| `data/embeddings_ids.json` |      30 Ko |   **40 Ko** | l'id de chaque ligne           |
+
+La densité réelle est de **5,7 Ko par offre**, et non 11,1 : le seuil de
+100 Mo est attendu vers **~18 000 offres**. La décision n'a pas à être
+réévaluée, et chaque rechargement ajoute à l'historique Git un fichier deux
+fois plus léger.
+
+La procédure de publication des **Conséquences** se réduit à :
+`python -m src.cli load --embeddings`, puis `git add data/ && git push`.
+`load` enchaîne entrepôt et compétences dans le même fichier temporaire ; les
+lancer séparément (`src.warehouse.load` puis `src.nlp.skills`) reste possible,
+mais sans la substitution d'un bloc.

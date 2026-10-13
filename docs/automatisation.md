@@ -85,6 +85,7 @@ docker compose exec radar-worker python -m src.cli report --threshold 30
 python -m src.cli ingest --dry-run          # liste les recherches, sans appel
 python -m src.cli load
 python -m src.cli report --week 2026-09-07  # une semaine précise
+python -m src.cli prune                     # pages brutes redondantes, sans rien supprimer
 ```
 
 ## Le rapport hebdomadaire
@@ -151,7 +152,10 @@ d'exécution entre deux `docker compose down` / `up`.
 
 - **Chaque collecte repart de zéro sur 365 jours** : `data/raw/` grossit
   d'environ 40 fichiers par jour. `load` dédoublonne, mais le disque n'est pas
-  purgé.
+  purgé. `prune` liste les pages redondantes — celles dont chaque offre figure,
+  dans une version au moins aussi récente, dans une page conservée — et refuse
+  tout plan qui ferait perdre une offre ; il ne supprime rien pour l'instant.
+  Le 13/10/2026 : 139 pages sur 238 redondantes, soit 54,9 Mo.
 - **L'index vectoriel n'est pas recalculé** par le workflow : `load
   --embeddings` exige torch, absent de l'image du worker. La page
   « Recherche » signale les offres non indexées.
@@ -161,7 +165,9 @@ d'exécution entre deux `docker compose down` / `up`.
 - **Le worker n'a pas d'authentification** : il n'est joignable que par n8n, sur
   le réseau interne de compose, et aucun port n'est publié sur l'hôte.
 - **Une seule commande à la fois** : un unique processus uvicorn sert l'API, et
-  deux `load` simultanés se disputeraient l'entrepôt.
+  deux `load` simultanés se disputeraient le même fichier temporaire. Le
+  dashboard, lui, peut lire pendant un `load` : il voit l'ancien entrepôt
+  jusqu'à la substitution, jamais un état intermédiaire.
 - **`emailFormat` doit rester sur `both`** dans le nœud « Envoi par email ».
   À l'import, n8n retire les paramètres égaux à leur valeur par défaut, et
   `html` — visible seulement si `emailFormat` vaut `html` ou `both` — serait

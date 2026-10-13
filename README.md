@@ -88,7 +88,7 @@ Les tests se lancent avec `pytest`, après `pip install -r requirements-dev.txt`
 
 - **Une seule source.** France Travail ne couvre pas LinkedIn, Welcome to the Jungle ni les sites carrières : les startups et les grands groupes tech y sont sous-représentés.
 - **L'historique est court.** La collecte automatisée n'a démarré qu'en septembre 2026, et l'API ne renvoie plus les offres retirées : les semaines anciennes sont sous-représentées, et les seuils du rapport restent à recalibrer.
-- **L'extraction de compétences repose sur une taxonomie fermée** de 110 compétences. Une technologie absente de la liste reste invisible.
+- **L'extraction de compétences repose sur une taxonomie fermée** de 128 compétences. Une technologie absente de la liste reste invisible.
 - **L'assistant de la démo ne rédige pas** : il affiche les statistiques SQL qu'un LLM recevrait, pour éviter une clé publique et des coûts. La rédaction exige `LLM_PROVIDER=anthropic`.
 - **L'index vectoriel n'est pas recalculé par n8n** (torch est absent du conteneur `radar-worker`), il faut le reconstruire à la main avec `python -m src.cli load --embeddings`.
 

@@ -1,9 +1,9 @@
 # Pitch — Radar Tech FR
 
 Trois usages : les lignes CV, le post LinkedIn, et la préparation d'entretien.
-Tous les chiffres viennent de `data/warehouse.duckdb` au 23/09/2026 : 2 789 offres
-collectées entre le 3 février et le 18 septembre 2026, 785 entreprises,
-18 régions, 110 compétences du dictionnaire, 8 907 liens offre–compétence.
+Tous les chiffres viennent de `data/warehouse.duckdb` au 13/10/2026 : 3 729 offres
+collectées entre le 3 février et le 29 septembre 2026, 958 entreprises,
+19 régions, 128 compétences au dictionnaire, 12 004 liens offre–compétence.
 
 ---
 
@@ -11,11 +11,11 @@ collectées entre le 3 février et le 18 septembre 2026, 785 entreprises,
 
 **Radar Tech FR — Observatoire du marché de l'emploi tech** · [démo](https://radar-tech-fr.streamlit.app/) · [code](https://github.com/AndresRocabado/radar-tech-fr)
 
-> Conception et développement d'un pipeline de données de bout en bout sur l'API France Travail : collecte de 2 789 offres (gestion du plafond de pagination par fenêtres de dates, limitation de débit, reprise sur erreur), modélisation SQL dans un entrepôt DuckDB et extraction de 110 compétences par dictionnaire contrôlé.
+> Conception et développement d'un pipeline de données de bout en bout sur l'API France Travail : collecte de 3 729 offres (gestion du plafond de pagination par fenêtres de dates, limitation de débit, reprise sur erreur), modélisation SQL dans un entrepôt DuckDB reconstruit de façon atomique et extraction de 128 compétences par dictionnaire contrôlé.
 >
 > Dashboard Streamlit en libre accès : volumes, salaires, régions et alternance, recherche sémantique multilingue (sentence-transformers, similitude cosinus) et assistant RAG dont les chiffres sont comptés en SQL, jamais rédigés par le modèle.
 >
-> Automatisation quotidienne par n8n (Docker), 183 tests automatisés sous intégration continue, sept décisions d'architecture documentées en ADR. Python, DuckDB, SQL, Streamlit, Plotly, Docker.
+> Automatisation quotidienne par n8n (Docker), 221 tests automatisés sous intégration continue, huit décisions d'architecture documentées en ADR. Python, DuckDB, SQL, Streamlit, Plotly, Docker.
 
 ---
 
@@ -25,7 +25,7 @@ collectées entre le 3 février et le 18 septembre 2026, 785 entreprises,
 >
 > La question de départ, dont je ne trouvais la réponse nulle part : quelles compétences data, IA et no-code les entreprises recrutent-elles vraiment, et où ?
 >
-> J'ai donc collecté 2 789 offres réelles via l'API France Travail et construit le pipeline complet : ingestion, entrepôt DuckDB, extraction des compétences, dashboard.
+> J'ai donc collecté 3 729 offres réelles via l'API France Travail et construit le pipeline complet : ingestion, entrepôt DuckDB, extraction des compétences, dashboard.
 >
 > On peut y comparer les volumes par région et par contrat, regarder ce que l'alternance représente vraiment, chercher une offre en langage naturel — « alternance data engineering avec du cloud en région lyonnaise » — et poser une question à un assistant dont tous les chiffres sont comptés en SQL, jamais inventés par un modèle de langue.
 >
@@ -46,8 +46,8 @@ collectées entre le 3 février et le 18 septembre 2026, 785 entreprises,
 **Parce que la charge est analytique, mono-utilisateur et en lecture seule.**
 
 Des `GROUP BY` sur toute la table, écrits une fois par jour par `load` et lus en
-continu par le dashboard, sans aucune écriture concurrente. Sur 2 789 offres
-(~32 Mo), PostgreSQL m'aurait demandé un serveur à héberger et à sécuriser et des
+continu par le dashboard, sans aucune écriture concurrente. Sur 3 729 offres
+(~21 Mo), PostgreSQL m'aurait demandé un serveur à héberger et à sécuriser et des
 identifiants à distribuer à la démo, pour n'utiliser aucun de ses atouts réels :
 transactions concurrentes, droits par utilisateur, écritures continues.
 
@@ -127,7 +127,7 @@ est la plus récente.
 
 ### Q4. Comment extrayez-vous les compétences ? Pourquoi pas du NER ou un LLM ?
 
-**Un dictionnaire contrôlé de 110 technologies, compilé en expressions
+**Un dictionnaire contrôlé de 128 technologies, compilé en expressions
 régulières.** Chaque entrée porte ses alias, et les séparateurs sont assouplis :
 « Power BI » est écrit une fois et retrouve « PowerBI », « Power-BI »,
 « Power_BI ». Le texte est désaccentué une seule fois pour tout le dictionnaire.
@@ -154,7 +154,7 @@ candidats, pas pour les compter directement.
 **Oui, et j'en connais le prix.**
 
 Streamlit Community Cloud n'offre ni base de données ni stockage persistant : le
-dépôt est la seule source possible. Le fichier fait quelques mégaoctets, et le
+dépôt est la seule source possible. Le fichier fait une vingtaine de mégaoctets, et le
 versionner est ce qui rend la démo utilisable après un `git clone`, sans clé et
 sans service externe. Le seuil que je me suis fixé pour reconsidérer est 100 Mo
 (ADR 0003). Au-delà, je passerais à un stockage objet avec un fichier Parquet, ou
@@ -171,3 +171,18 @@ s'exécuter dans cet état, et un test de non-régression le vérifie.
 C'est l'exemple que je donnerais si on me demande un bug que j'ai trouvé
 moi-même : il ne se voyait pas en développement, parce qu'en développement
 `data/raw/` est toujours plein.
+
+**Le second coût, que j'ai découvert en mesurant :** le fichier grossissait à
+chaque rechargement. DuckDB ne rend jamais l'espace d'une table remplacée :
+sur 39 Mo, 46 % étaient des blocs libres, et Git en gardait une copie complète à
+chaque commit. `load` construit désormais l'entrepôt dans un fichier temporaire,
+puis le substitue d'un seul `os.replace`. Le fichier est tombé à 21 Mo, et le
+même geste a réglé deux autres problèmes : le dashboard ne peut plus lire un
+entrepôt à moitié reconstruit, et un échec en cours de route laisse l'ancien
+intact.
+
+Même prudence pour le brut, qui est la seule archive des offres retirées de
+l'API : avant de supprimer quoi que ce soit, j'ai écrit une simulation qui
+prouve, offre par offre, qu'aucune version n'est perdue. Sur 238 pages, 139
+sont redondantes. Rien n'est supprimé tant que cette vérification n'est pas en
+place.
