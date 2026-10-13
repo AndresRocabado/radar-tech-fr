@@ -3,7 +3,7 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
 et le projet la [gestion sémantique de version](https://semver.org/lang/fr/).
 
-## [Non publié]
+## [1.2.0] — 2026-10-13
 
 ### Ajouté
 
@@ -27,6 +27,10 @@ et le projet la [gestion sémantique de version](https://semver.org/lang/fr/).
 - Page « Recherche » : résultats mis en cache, filtrage de l'index par
   dictionnaire id → ligne.
 - Modèle par défaut `claude-opus-5-5`, avec un effort explicite.
+- Documentation : mise à jour de l'ADR 0003 (tailles réelles, procédure de
+  publication), du guide d'automatisation (`prune`), du pitch et du README
+  (3 729 offres, 128 compétences au dictionnaire, 221 tests). Le dashboard
+  indique `python -m src.cli load` quand l'entrepôt manque.
 
 ## [1.1.0] — 2026-10-10
 
@@ -98,5 +102,6 @@ réelles et couvert par 183 tests.
 - README : version de Python requise, avertissement sur `load`, et précision
   que `pytest` demande `requirements-dev.txt`.
 
+[1.2.0]: https://github.com/AndresRocabado/radar-tech-fr/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/AndresRocabado/radar-tech-fr/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/AndresRocabado/radar-tech-fr/releases/tag/v1.0.0
