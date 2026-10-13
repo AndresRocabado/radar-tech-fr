@@ -180,16 +180,25 @@ def context(question: str, filters: Filters) -> rag.Context:
 
 
 @st.cache_data(show_spinner="Rédaction de la réponse…")
-def _answer(question: str, filters: Filters, _context: rag.Context) -> str:
+def _answer(
+    question: str, filters: Filters, provider: str, model: str, version: float,
+    _context: rag.Context,
+) -> str:
     # ``_context`` est ignoré par la clé du cache — il découle déjà de la
-    # question et des filtres —, ce qui évite d'avoir à le rendre hachable.
+    # question, des filtres et de la version de l'entrepôt —, ce qui évite
+    # d'avoir à le rendre hachable. Fournisseur et modèle font partie de la
+    # clé : passer de mock à anthropic ne doit pas resservir l'ancienne réponse.
     return llm.answer(_context)
 
 
 def reply(question: str, filters: Filters) -> Reply:
     """Répondre à ``question``, en retombant sur les statistiques si l'appel échoue."""
     found = context(question, filters)
+    config = llm.Config.from_env()
+    version = data.db_path().stat().st_mtime
     try:
-        return Reply(found, _answer(question, filters, found))
+        return Reply(
+            found, _answer(question, filters, config.provider, config.model, version, found)
+        )
     except llm.LLMError as exc:
         return Reply(found, rag.mock_answer(found), str(exc))
