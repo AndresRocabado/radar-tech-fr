@@ -183,24 +183,26 @@ def test_les_champs_imbriques_sont_remontes() -> None:
         "dateCreation": "2026-08-25T13:18:16.053Z",
         "romeCode": "M1811",
         "experienceLibelle": "Débutant accepté",
+        "experienceExige": "D",
         "description": "Une description.",
     }
 
     with synthetic_warehouse([offre]) as con:
         ligne = con.execute(
             "SELECT intitule, entreprise, type_contrat, code_rome, experience, "
-            "description, date_creation FROM offres"
+            "experience_exigee, description, date_creation FROM offres"
         ).fetchone()
 
-    assert ligne[:6] == (
+    assert ligne[:7] == (
         "Data Engineer (H/F)",
         "ACME",
         "CDI",
         "M1811",
         "Débutant accepté",
+        "D",
         "Une description.",
     )
-    assert ligne[6].year == 2026
+    assert ligne[7].year == 2026
 
 
 def test_une_entreprise_anonyme_ne_casse_pas_la_vue() -> None:

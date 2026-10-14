@@ -56,6 +56,9 @@ WITH base AS (
         TRY_CAST(offre->>'$.dateCreation' AS TIMESTAMP) AS date_creation,
         offre->>'$.romeCode'          AS code_rome,
         offre->>'$.experienceLibelle' AS experience,
+        -- Code structuré (« D » débutant accepté, « E » expérience exigée), à
+        -- filtrer plutôt que le libellé, saisi en texte libre (« 5 An(s) - ... »).
+        offre->>'$.experienceExige'   AS experience_exigee,
         offre->>'$.description'       AS description,
         offre->>'$.lieuTravail.libelle'    AS lieu_libelle,
         offre->>'$.lieuTravail.commune'    AS code_insee,
@@ -169,6 +172,7 @@ SELECT
     a.salaire_max_brut,
     a.salaire_hors_bornes,
     a.experience,
+    a.experience_exigee,
     a.description
 FROM borne a
 LEFT JOIN ref_regions par_departement USING (departement)

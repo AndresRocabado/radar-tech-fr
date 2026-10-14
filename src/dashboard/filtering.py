@@ -22,6 +22,10 @@ from src.warehouse.query import fetch_one
 UNKNOWN_REGION = "Non renseignée"
 UNKNOWN_CONTRACT = "Non renseigné"
 
+#: Codes ``experienceExige`` de l'API France Travail.
+BEGINNER = "D"
+EXPERIENCED = "E"
+
 
 def _as_list(values: Sequence[str] | None) -> list[str] | None:
     """Une sélection vide veut dire « pas de filtre », pas « rien »."""
@@ -43,6 +47,8 @@ class Filters:
     families: tuple[str, ...] | None = None
     #: ``True`` : alternance seule ; ``False`` : hors alternance ; ``None`` : toutes.
     apprenticeship: bool | None = None
+    #: :data:`BEGINNER`, :data:`EXPERIENCED` ou ``None`` : toutes.
+    experience: str | None = None
 
     def params(self) -> dict[str, Any]:
         """Paramètres nommés attendus par :data:`FILTERED_CTE`."""
@@ -53,6 +59,7 @@ class Filters:
             "fin": self.end,
             "familles": _as_list(self.families),
             "alternance": self.apprenticeship,
+            "experience": self.experience,
         }
 
 
@@ -93,6 +100,7 @@ WITH filtrees AS (
       AND ($debut::DATE IS NULL OR o.date_creation::DATE >= $debut::DATE)
       AND ($fin::DATE IS NULL OR o.date_creation::DATE <= $fin::DATE)
       AND ($alternance::BOOLEAN IS NULL OR o.est_alternance = $alternance::BOOLEAN)
+      AND ($experience::VARCHAR IS NULL OR o.experience_exigee = $experience::VARCHAR)
       AND ($familles::VARCHAR[] IS NULL OR o.id IN (
             SELECT c.offre_id
             FROM offre_competences c

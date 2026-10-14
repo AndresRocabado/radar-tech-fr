@@ -19,8 +19,13 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.dashboard import queries  # noqa: E402
-from src.dashboard.filtering import Filters, filter_options  # noqa: E402
+from src.dashboard import export, queries  # noqa: E402
+from src.dashboard.filtering import (  # noqa: E402
+    BEGINNER,
+    EXPERIENCED,
+    Filters,
+    filter_options,
+)
 from src.nlp.skills import build_offre_competences  # noqa: E402
 from src.warehouse.load import apply_models  # noqa: E402
 
@@ -32,6 +37,7 @@ def offer(
     text: str,
     salary: str | None = None,
     company: str | None = None,
+    experience: str = "D",
 ) -> dict[str, Any]:
     """A minimal offer, shaped like the ones in ``data/raw/``."""
     result: dict[str, Any] = {
@@ -43,6 +49,8 @@ def offer(
         "natureContrat": "Contrat apprentissage",
         "lieuTravail": {"libelle": place},
         "entreprise": {"nom": company} if company else {},
+        "experienceExige": experience,
+        "origineOffre": {"urlOrigine": f"https://candidat.francetravail.fr/offres/{offer_id}"},
     }
     if salary:
         result["salaire"] = {"libelle": salary}
@@ -56,7 +64,7 @@ OFFERS = [
           "Annuel de 30000.0 Euros", "ACME"),
     # Deux semaines sans offre séparent B de C.
     offer("C", "2026-06-24T10:00:00Z", "69 - Lyon", "Une démarche no-code", None, "Globex"),
-    offer("D", "2026-08-10T10:00:00Z", "Bretagne", "Excel", None, None),
+    offer("D", "2026-08-10T10:00:00Z", "Bretagne", "Excel", None, None, experience="E"),
 ]
 
 
@@ -116,6 +124,28 @@ def test_filtre_alternance(con: duckdb.DuckDBPyConnection) -> None:
     assert queries.kpis(con, Filters(apprenticeship=True)).at[0, "offres"] == 4
     hors = queries.kpis(con, Filters(apprenticeship=False)).iloc[0]
     assert (hors["offres"], hors["part_alternance"]) == (1, 0.0)
+
+
+def test_filtre_experience(con: duckdb.DuckDBPyConnection) -> None:
+    """Le code ``experienceExige`` sépare débutants acceptés et expérience exigée."""
+    assert queries.kpis(con, Filters(experience=BEGINNER)).at[0, "offres"] == 3
+    assert queries.kpis(con, Filters(experience=EXPERIENCED)).at[0, "offres"] == 1
+
+
+def test_export_suit_les_filtres_sans_description(con: duckdb.DuckDBPyConnection) -> None:
+    frame = export.offers_export(con, Filters(regions=("Île-de-France",)))
+    assert frame["id_offre"].tolist() == ["B", "A"]  # la plus récente d'abord
+    assert "description" not in frame.columns
+    assert frame.at[0, "url"] == "https://candidat.francetravail.fr/offres/B"
+    assert frame.at[0, "salaire_min_annuel"] == 30000.0
+
+
+def test_export_csv_lisible_par_excel(con: duckdb.DuckDBPyConnection) -> None:
+    payload = export.to_csv(export.offers_export(con, Filters(regions=("Bretagne",))))
+    assert payload.startswith("﻿".encode())
+    header, row = payload.decode("utf-8-sig").splitlines()
+    assert header.startswith("id_offre;intitule;entreprise;region")
+    assert row.startswith("D;Alternance data;;Bretagne")
 
 
 def test_les_semaines_vides_valent_zero(con: duckdb.DuckDBPyConnection) -> None:

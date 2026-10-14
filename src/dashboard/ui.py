@@ -21,7 +21,8 @@ FAMILY_LABELS = {
 
 NO_OFFER = (
     "Aucune offre ne correspond aux filtres sélectionnés. Élargissez la région, "
-    "le type de contrat, la période ou la famille de compétences."
+    "le type de contrat, l'alternance, l'expérience, la période ou la famille "
+    "de compétences."
 )
 
 _NARROW_SPACE = " "

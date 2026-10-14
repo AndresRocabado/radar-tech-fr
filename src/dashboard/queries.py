@@ -13,6 +13,7 @@ from typing import Any
 import duckdb
 import pandas as pd
 
+from src.dashboard.export import offers_export
 from src.dashboard.filtering import FILTERED_CTE, UNKNOWN_CONTRACT, UNKNOWN_REGION, Filters
 from src.nlp.nocode import GENERIC_TERM, NOCODE_FAMILY
 
@@ -217,4 +218,5 @@ QUERIES: dict[str, Query] = {
     "nocode_monthly": nocode_monthly,
     "salary_by_ai": salary_by_ai,
     "top_tools_by_family": top_tools_by_family,
+    "offers_export": offers_export,
 }

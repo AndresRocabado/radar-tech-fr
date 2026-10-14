@@ -7,7 +7,9 @@ from typing import Any
 
 import streamlit as st
 
-from src.dashboard.filtering import Filters
+from src.dashboard import data
+from src.dashboard.export import to_csv
+from src.dashboard.filtering import BEGINNER, EXPERIENCED, Filters
 from src.dashboard.ui import family_label, family_order
 
 #: Libellé affiché → valeur transmise au filtre ``est_alternance``.
@@ -15,6 +17,13 @@ APPRENTICESHIP_CHOICES: dict[str, bool | None] = {
     "Toutes": None,
     "Alternance uniquement": True,
     "Hors alternance": False,
+}
+
+#: Libellé affiché → code ``experienceExige`` transmis au filtre.
+EXPERIENCE_CHOICES: dict[str, str | None] = {
+    "Toutes": None,
+    "Débutant accepté": BEGINNER,
+    "Expérience exigée": EXPERIENCED,
 }
 
 
@@ -48,6 +57,10 @@ def render(options: dict[str, Any]) -> Filters:
             "Alternance", list(APPRENTICESHIP_CHOICES), horizontal=True, key="f_alternance",
             help="Apprentissage ou contrat de professionnalisation.",
         )
+        experience = st.radio(
+            "Expérience", list(EXPERIENCE_CHOICES), horizontal=True, key="f_experience",
+            help="Niveau d'expérience indiqué par le recruteur sur France Travail.",
+        )
 
         start, end = options["start"], options["end"]
         chosen_start = chosen_end = None
@@ -69,11 +82,24 @@ def render(options: dict[str, Any]) -> Filters:
             "une de ses compétences."
         )
 
-    return Filters(
+    filters = Filters(
         regions=tuple(regions) or None,
         contracts=tuple(contracts) or None,
         start=chosen_start,
         end=chosen_end,
         families=tuple(families) or None,
         apprenticeship=APPRENTICESHIP_CHOICES[apprenticeship],
+        experience=EXPERIENCE_CHOICES[experience],
     )
+    with st.sidebar:
+        st.divider()
+        # Le CSV n'est produit qu'au clic : la requête ne tourne pas à chaque interaction.
+        st.download_button(
+            "Télécharger la sélection (CSV)",
+            data=lambda: to_csv(data.load("offers_export", filters)),
+            file_name="radar-tech-fr_offres.csv", mime="text/csv",
+            on_click="ignore", icon=":material/download:", width="stretch",
+        )
+        if end is not None:
+            st.caption(f"Offres publiées jusqu'au {end:%d/%m/%Y}.")
+    return filters
