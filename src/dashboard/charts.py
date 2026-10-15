@@ -51,18 +51,19 @@ def hbar(
     *,
     hovertemplate: str,
     customdata: pd.DataFrame | None = None,
-    color: str = PRIMARY,
+    color: str | Sequence[str] = PRIMARY,
 ) -> go.Figure:
     """Barres horizontales dans l'ordre reçu, la première en haut.
 
     La valeur est écrite au bout de chaque barre : l'axe des x devient inutile.
+    ``color`` vaut pour toutes les barres, ou en donne une par barre.
     """
     fig = go.Figure(
         go.Bar(
             x=list(values),
             y=list(labels),
             orientation="h",
-            marker={"color": color},
+            marker={"color": color if isinstance(color, str) else list(color)},
             text=list(values),
             textposition="outside",
             textfont={"color": INK_SECONDARY},

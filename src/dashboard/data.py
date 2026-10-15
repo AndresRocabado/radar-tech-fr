@@ -16,7 +16,7 @@ import duckdb
 import pandas as pd
 import streamlit as st
 
-from src.dashboard import queries
+from src.dashboard import profile, queries
 from src.dashboard.filtering import Filters
 from src.dashboard.filtering import filter_options as _query_options
 
@@ -69,6 +69,20 @@ def load(name: str, filters: Filters) -> pd.DataFrame:
     """Exécuter la requête ``name`` de :data:`queries.QUERIES`, avec cache."""
     path = db_path()
     return _load(name, filters, str(path), path.stat().st_mtime)
+
+
+@st.cache_data(show_spinner=False)
+def _load_profile(
+    name: str, filters: Filters, skills: tuple[str, ...], path: str, version: float
+) -> pd.DataFrame:
+    with _connect(Path(path)) as con:
+        return profile.PROFILE_QUERIES[name](con, filters, skills)
+
+
+def load_profile(name: str, filters: Filters, skills: tuple[str, ...]) -> pd.DataFrame:
+    """Exécuter la requête ``name`` de :data:`profile.PROFILE_QUERIES`, avec cache."""
+    path = db_path()
+    return _load_profile(name, filters, skills, str(path), path.stat().st_mtime)
 
 
 @st.cache_data(show_spinner=False)
