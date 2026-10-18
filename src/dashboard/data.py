@@ -26,6 +26,9 @@ DB_PATH_ENV = "RADAR_DB_PATH"
 REQUIRED_TABLES = ("offres", "offre_competences")
 
 _BUILD_HINT = "Construisez-le avec `python -m src.cli load`."
+#: Borne le cache : chaque combinaison de filtres y laisse une entrée, et la
+#: mémoire de Streamlit Community Cloud est limitée.
+_MAX_CACHED_QUERIES = 128
 
 
 def db_path() -> Path:
@@ -59,7 +62,7 @@ def warehouse_problem() -> str | None:
     return None
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, max_entries=_MAX_CACHED_QUERIES)
 def _load(name: str, filters: Filters, path: str, version: float) -> pd.DataFrame:
     with _connect(Path(path)) as con:
         return queries.QUERIES[name](con, filters)
@@ -71,7 +74,7 @@ def load(name: str, filters: Filters) -> pd.DataFrame:
     return _load(name, filters, str(path), path.stat().st_mtime)
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, max_entries=_MAX_CACHED_QUERIES)
 def _load_profile(
     name: str, filters: Filters, skills: tuple[str, ...], path: str, version: float
 ) -> pd.DataFrame:
@@ -85,7 +88,7 @@ def load_profile(name: str, filters: Filters, skills: tuple[str, ...]) -> pd.Dat
     return _load_profile(name, filters, skills, str(path), path.stat().st_mtime)
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, max_entries=4)
 def _options(path: str, version: float) -> dict[str, Any]:
     with _connect(Path(path)) as con:
         return _query_options(con)
