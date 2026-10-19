@@ -12,7 +12,7 @@ Un observatoire construit sur 3 729 offres réelles de l'API France Travail, mis
 ## Le problème
 
 Un candidat en alternance, une école ou un recruteur n'a pas de vue chiffrée des compétences tech demandées en France : les offres sont dispersées et rédigées en texte libre.
-Radar Tech FR collecte ces offres, en extrait les compétences, puis permet de comparer volumes, salaires, régions et alternance, et de poser des questions en langage naturel.
+Radar Tech FR collecte ces offres, en extrait les compétences, puis permet de comparer volumes, salaires, régions et alternance, de confronter son propre profil aux compétences demandées, et de poser des questions en langage naturel.
 Chaque lundi, un rapport signale les compétences en forte hausse.
 
 ## Architecture
@@ -35,6 +35,7 @@ flowchart LR
     subgraph APP["Dashboard Streamlit · app.py"]
         P1["Vue d'ensemble"]
         P2["No-code & IA"]
+        P5["Mon profil"]
         P3["Recherche sémantique"]
         P4["Assistant RAG"]
     end
@@ -46,7 +47,7 @@ flowchart LR
     API --> ING --> RAW --> LOAD --> DB
     DB --> SK --> DB
     DB --> EMB --> VEC
-    DB --> P1 & P2 & P3 & P4
+    DB --> P1 & P2 & P5 & P3 & P4
     VEC --> P3 & P4
     P4 -. "LLM_PROVIDER=anthropic" .-> LLM
     N8N -- "déclenche" --> ING
@@ -87,7 +88,7 @@ Les tests se lancent avec `pytest`, après `pip install -r requirements-dev.txt`
 ## Limites connues
 
 - **Une seule source.** France Travail ne couvre pas LinkedIn, Welcome to the Jungle ni les sites carrières : les startups et les grands groupes tech y sont sous-représentés.
-- **L'historique est court.** La collecte automatisée n'a démarré qu'en septembre 2026, et l'API ne renvoie plus les offres retirées : les semaines anciennes sont sous-représentées, et les seuils du rapport restent à recalibrer.
+- **L'historique est court.** Les collectes de septembre 2026 ont été lancées à la main ; la collecte quotidienne automatisée ne tourne que depuis le 14/10/2026, et seulement quand le poste qui héberge n8n est allumé à 06:00. L'API ne renvoie plus les offres retirées : les semaines anciennes sont sous-représentées, et les seuils du rapport restent à recalibrer.
 - **L'extraction de compétences repose sur une taxonomie fermée** de 128 compétences. Une technologie absente de la liste reste invisible.
 - **L'assistant de la démo ne rédige pas** : il affiche les statistiques SQL qu'un LLM recevrait, pour éviter une clé publique et des coûts. La rédaction exige `LLM_PROVIDER=anthropic`.
 - **L'index vectoriel n'est pas recalculé par n8n** (torch est absent du conteneur `radar-worker`), il faut le reconstruire à la main avec `python -m src.cli load --embeddings`.

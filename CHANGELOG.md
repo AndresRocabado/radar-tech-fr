@@ -3,6 +3,24 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
 et le projet la [gestion sémantique de version](https://semver.org/lang/fr/).
 
+## [Unreleased]
+
+### Ajouté
+
+- Page « Mon profil » : le candidat décrit son profil en texte libre, le
+  dashboard en extrait les compétences, mesure leur couverture du marché, liste les compétences les plus demandées
+  qui lui manquent et les offres qui lui correspondent le mieux
+  (`src/dashboard/profile.py`).
+- Barre latérale : filtre « Expérience » (débutant accepté / expérience
+  exigée, champ `experienceExige` de l'API), export CSV des offres filtrées
+  (séparateur `;`, virgule décimale, UTF-8 avec BOM, lisible tel quel par
+  Excel) et date de la dernière offre publiée.
+
+### Modifié
+
+- README : la collecte n'a jamais tourné seule avant le 14/10/2026, date
+  d'activation du workflow n8n ; la limite connue le dit désormais.
+
 ## [1.2.0] — 2026-10-13
 
 ### Ajouté
