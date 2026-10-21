@@ -7,7 +7,7 @@ import streamlit as st
 
 from src.dashboard import charts, data
 from src.dashboard.filtering import Filters
-from src.dashboard.queries import TOP_SKILLS_LIMIT
+from src.dashboard.queries_market import TOP_SKILLS_LIMIT
 from src.dashboard.ui import (
     NO_OFFER,
     explain_if_empty,

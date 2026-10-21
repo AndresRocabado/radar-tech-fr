@@ -14,6 +14,7 @@ from datetime import date
 from typing import Any
 
 import duckdb
+import pandas as pd
 
 from src.warehouse.query import fetch_one
 
@@ -114,3 +115,10 @@ competences_filtrees AS (
        OR list_contains($familles::VARCHAR[], c.famille)
 )
 """
+
+
+def run_filtered(
+    con: duckdb.DuckDBPyConnection, body: str, filters: Filters, **extra: Any
+) -> pd.DataFrame:
+    """Exécuter ``body`` à la suite des CTE de filtrage."""
+    return con.execute(FILTERED_CTE + body, {**filters.params(), **extra}).df()

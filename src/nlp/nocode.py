@@ -1,7 +1,7 @@
 """Conventions de nommage du no-code dans ``data/skills_taxonomy.yaml``.
 
 Deux chaînes, mais elles lient le YAML au SQL de deux modules qui ne se
-connaissent pas : ``src/nlp/report.py`` et ``src/dashboard/queries.py``. Écrites
+connaissent pas : ``src/nlp/report.py`` et ``src/dashboard/queries_nocode.py``. Écrites
 en double, un label renommé dans le YAML faisait tomber leurs comptages à zéro
 sans lever la moindre erreur — un ``LIKE`` qui ne correspond plus ne se plaint
 pas. ``tests/test_skills.py`` vérifie que le YAML respecte toujours ces valeurs.
