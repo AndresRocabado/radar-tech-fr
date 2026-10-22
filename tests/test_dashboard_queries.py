@@ -1,8 +1,4 @@
-"""Tests for the dashboard queries, on a synthetic warehouse.
-
-The offers go through the shipped ``models.sql`` and the real skill extraction,
-so the queries run against the same views and table as in production.
-"""
+"""Tests for the dashboard queries, on the synthetic warehouse of ``dashboard_data``."""
 
 from __future__ import annotations
 
@@ -10,7 +6,6 @@ import json
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Any
 
 import duckdb
 import pandas as pd
@@ -18,6 +13,8 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
+
+from dashboard_data import make_warehouse, offer  # noqa: E402
 
 from src.dashboard import export, queries  # noqa: E402
 from src.dashboard import queries_market as market  # noqa: E402
@@ -28,62 +25,13 @@ from src.dashboard.filtering import (  # noqa: E402
     Filters,
     filter_options,
 )
-from src.nlp.skills import build_offre_competences  # noqa: E402
-from src.warehouse.load import apply_models  # noqa: E402
-
-
-def offer(
-    offer_id: str,
-    created: str,
-    place: str,
-    text: str,
-    salary: str | None = None,
-    company: str | None = None,
-    experience: str = "D",
-) -> dict[str, Any]:
-    """A minimal offer, shaped like the ones in ``data/raw/``."""
-    result: dict[str, Any] = {
-        "id": offer_id,
-        "intitule": "Alternance data",
-        "description": text,
-        "dateCreation": created,
-        "typeContrat": "CDD",
-        "natureContrat": "Contrat apprentissage",
-        "lieuTravail": {"libelle": place},
-        "entreprise": {"nom": company} if company else {},
-        "experienceExige": experience,
-        "origineOffre": {"urlOrigine": f"https://candidat.francetravail.fr/offres/{offer_id}"},
-    }
-    if salary:
-        result["salaire"] = {"libelle": salary}
-    return result
-
-
-OFFERS = [
-    offer("A", "2026-06-01T10:00:00Z", "75 - Paris", "Python et Power Automate",
-          "Annuel de 20000.0 Euros", "ACME"),
-    offer("B", "2026-06-02T10:00:00Z", "75 - Paris", "Machine Learning avec Python",
-          "Annuel de 30000.0 Euros", "ACME"),
-    # Deux semaines sans offre séparent B de C.
-    offer("C", "2026-06-24T10:00:00Z", "69 - Lyon", "Une démarche no-code", None, "Globex"),
-    offer("D", "2026-08-10T10:00:00Z", "Bretagne", "Excel", None, None, experience="E"),
-]
 
 
 @pytest.fixture()
 def con() -> duckdb.DuckDBPyConnection:
-    """An in-memory warehouse over :data:`OFFERS`."""
+    """An in-memory warehouse over :data:`dashboard_data.OFFERS`."""
     connection = duckdb.connect()
-    connection.execute(
-        "CREATE TABLE raw_offres (id VARCHAR PRIMARY KEY, offre JSON NOT NULL, "
-        "source_file VARCHAR, ingested_at TIMESTAMP)"
-    )
-    connection.executemany(
-        "INSERT INTO raw_offres VALUES (?, ?, 'synthetique', now())",
-        [(o["id"], json.dumps(o, ensure_ascii=False)) for o in OFFERS],
-    )
-    apply_models(connection)
-    build_offre_competences(connection)
+    make_warehouse(connection)
     yield connection
     connection.close()
 
