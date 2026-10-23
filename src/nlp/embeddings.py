@@ -7,13 +7,12 @@ on encode chaque tranche, et le vecteur de l'offre est la moyenne normalisée de
 ses tranches.
 
 Usage :
-    python -m src.nlp.embeddings                  # calcule et enregistre l'index
-    python -m src.nlp.embeddings --benchmark 200  # mesure le débit, n'écrit rien
+    python -m src.cli embed                   # calcule et enregistre l'index
+    python -m src.cli embed --benchmark 200   # mesure le débit, n'écrit rien
 """
 
 from __future__ import annotations
 
-import argparse
 import itertools
 import logging
 import time
@@ -151,28 +150,3 @@ def benchmark(
     started = time.perf_counter()
     embed_texts(sample, model)
     return (time.perf_counter() - started) / sample_size, len(texts)
-
-
-def main() -> None:
-    """Point d'entrée de ``python -m src.nlp.embeddings``."""
-    parser = argparse.ArgumentParser(description="Calculer les embeddings des offres.")
-    parser.add_argument("--benchmark", type=int, metavar="N",
-                        help="mesurer le débit sur N offres, sans rien écrire")
-    args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    logging.getLogger("httpx").setLevel(logging.WARNING)  # une ligne par fichier du modèle
-
-    if args.benchmark:
-        per_offer, total = benchmark(args.benchmark)
-        logger.info("%.3f s par offre (%.1f offres/s) sur %d textes",
-                    per_offer, 1 / per_offer, args.benchmark)
-        for count in (total, 1_000, 10_000):
-            logger.info("Estimation pour %6d offres : %7.1f s", count, count * per_offer)
-        return
-
-    written = build_embeddings()
-    logger.info("Index prêt dans %s (%d offres)", DEFAULT_VECTORS_PATH.parent, written)
-
-
-if __name__ == "__main__":
-    main()

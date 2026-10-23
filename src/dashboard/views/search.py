@@ -61,6 +61,6 @@ def render(filters: Filters) -> None:
     if missing:
         st.warning(
             f"{missing} offre(s) de la sélection ne sont pas encore indexées. "
-            "Relancez `python -m src.nlp.embeddings`.",
+            "Relancez `python -m src.cli embed`.",
             icon=":material/warning:",
         )

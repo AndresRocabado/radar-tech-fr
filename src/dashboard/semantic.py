@@ -39,7 +39,7 @@ def index_problem() -> str | None:
     missing = [p.name for p in (DEFAULT_VECTORS_PATH, DEFAULT_IDS_PATH) if not p.is_file()]
     if missing:
         return (f"L'index de recherche est introuvable ({', '.join(missing)}). "
-                "Construisez-le avec `python -m src.nlp.embeddings`.")
+                "Construisez-le avec `python -m src.cli embed`.")
     return None
 
 

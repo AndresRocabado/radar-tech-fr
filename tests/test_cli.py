@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import duckdb
+import pytest
 from typer.testing import CliRunner
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -67,3 +68,33 @@ def test_ingest_dry_run_sans_appel_reseau() -> None:
 
     assert result.exit_code == 0, result.output
     assert last_json_line(result.stdout)["recherches"] == ["data engineer", "data analyst"]
+
+
+def test_embed_construit_l_index_sans_charger_le_modele(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.nlp import embeddings
+
+    monkeypatch.setattr(embeddings, "build_embeddings", lambda: 42)
+
+    result = CliRunner().invoke(app, ["embed"])
+
+    assert result.exit_code == 0, result.output
+    assert len(result.stdout.strip().splitlines()) == 1
+    assert last_json_line(result.stdout)["offres_indexees"] == 42
+
+
+def test_embed_benchmark_n_ecrit_pas_l_index(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.nlp import embeddings
+
+    def fail() -> int:
+        raise AssertionError("--benchmark ne doit pas écrire l'index")
+
+    monkeypatch.setattr(embeddings, "build_embeddings", fail)
+    monkeypatch.setattr(embeddings, "benchmark", lambda size: (0.05, 300))
+
+    result = CliRunner().invoke(app, ["embed", "--benchmark", "200"])
+
+    assert result.exit_code == 0, result.output
+    sortie = last_json_line(result.stdout)
+    assert sortie["echantillon"] == 200
+    assert sortie["offres_par_seconde"] == 20.0
+    assert sortie["estimations_s"] == {"300": 15.0, "1000": 50.0, "10000": 500.0}

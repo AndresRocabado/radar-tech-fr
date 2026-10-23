@@ -91,7 +91,7 @@ Les tests se lancent avec `pytest`, après `pip install -r requirements-dev.txt`
 - **L'historique est court.** Les collectes de septembre 2026 ont été lancées à la main ; la collecte quotidienne automatisée ne tourne que depuis le 14/10/2026, et seulement quand le poste qui héberge n8n est allumé à 06:00. L'API ne renvoie plus les offres retirées : les semaines anciennes sont sous-représentées, et les seuils du rapport restent à recalibrer.
 - **L'extraction de compétences repose sur une taxonomie fermée** de 128 compétences. Une technologie absente de la liste reste invisible.
 - **L'assistant de la démo ne rédige pas** : il affiche les statistiques SQL qu'un LLM recevrait, pour éviter une clé publique et des coûts. La rédaction exige `LLM_PROVIDER=anthropic`.
-- **L'index vectoriel n'est pas recalculé par n8n** (torch est absent du conteneur `radar-worker`), il faut le reconstruire à la main avec `python -m src.cli load --embeddings`.
+- **L'index vectoriel n'est pas recalculé par n8n** (torch est absent du conteneur `radar-worker`), il faut le reconstruire à la main avec `python -m src.cli embed` (ou `load --embeddings` pour enchaîner entrepôt et index).
 
 ## Avec plus de temps
 

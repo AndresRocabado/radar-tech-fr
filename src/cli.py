@@ -2,6 +2,7 @@
 
     python -m src.cli ingest     collect the offers into data/raw/
     python -m src.cli load       rebuild the warehouse and the skills table
+    python -m src.cli embed      rebuild the vector index (--benchmark N: measure only)
     python -m src.cli report     write the weekly Markdown / JSON summary
     python -m src.cli prune      list the redundant raw pages (dry run, deletes nothing)
 
@@ -127,6 +128,31 @@ def load(
         build_embeddings()
         payload["embeddings"] = True
     _emit(payload)
+
+
+@app.command()
+def embed(
+    benchmark: Annotated[
+        int | None, typer.Option(help="mesurer le débit sur N offres, sans rien écrire")
+    ] = None,
+) -> None:
+    """Recalculer l'index vectoriel des offres (télécharge le modèle au premier appel)."""
+    # torch is heavy and absent from the worker image: imported only here.
+    from src.nlp import embeddings
+    from src.nlp.search import DEFAULT_VECTORS_PATH
+
+    logging.getLogger("httpx").setLevel(logging.WARNING)  # one line per model file
+    if benchmark:
+        per_offer, total = embeddings.benchmark(benchmark)
+        _emit({
+            "echantillon": benchmark,
+            "secondes_par_offre": round(per_offer, 4),
+            "offres_par_seconde": round(1 / per_offer, 1),
+            "estimations_s": {count: round(count * per_offer, 1) for count in (total, 1_000, 10_000)},
+        })
+        return
+
+    _emit({"offres_indexees": embeddings.build_embeddings(), "index": DEFAULT_VECTORS_PATH.parent})
 
 
 @app.command()

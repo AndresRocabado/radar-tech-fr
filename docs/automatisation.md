@@ -157,7 +157,8 @@ d'exécution entre deux `docker compose down` / `up`.
   tout plan qui ferait perdre une offre ; il ne supprime rien pour l'instant.
   Le 13/10/2026 : 139 pages sur 238 redondantes, soit 54,9 Mo.
 - **L'index vectoriel n'est pas recalculé** par le workflow : `load
-  --embeddings` exige torch, absent de l'image du worker. La page
+  --embeddings`, comme `embed`, exige torch, absent de l'image du worker. On
+  le reconstruit à la main avec `python -m src.cli embed` ; la page
   « Recherche » signale les offres non indexées.
 - **Les seuils du rapport sont à recalibrer** une fois quelques semaines de
   collecte quotidienne accumulées : tant que l'entrepôt vient d'une collecte
